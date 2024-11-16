@@ -21,7 +21,7 @@ struct REMABILITYUTILITY_API FRemTagEventManager
 	GENERATED_BODY()
 
 private:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rem", meta = (AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rem", meta = (AllowPrivateAccess, ShowInnerProperties))
 	TWeakObjectPtr<UAbilitySystemComponent> AbilitySystem{};
 
 	TMap<FGameplayTag, FDelegateHandle> TagToEventHandle{};
