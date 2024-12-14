@@ -1,33 +1,32 @@
-// Copyright RemRemRemRe, All Rights Reserved.
+// Copyright RemRemRemRe. All Rights Reserved.
 
-namespace UnrealBuildTool.Rules
+using UnrealBuildTool;
+
+public class RemAbilityUtility : ModuleRules
 {
-	public class RemAbilityUtility : ModuleRules
+	public RemAbilityUtility(ReadOnlyTargetRules target) : base(target)
 	{
-		public RemAbilityUtility(ReadOnlyTargetRules target) : base(target)
-		{
-			ShadowVariableWarningLevel = WarningLevel.Error;
-			IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
-			DefaultBuildSettings = BuildSettingsVersion.Latest;
-			CppStandard = CppStandardVersion.EngineDefault;
-			UnsafeTypeCastWarningLevel = WarningLevel.Warning;
-			
-			bEnableNonInlinedGenCppWarnings = true;
-			bUseUnity = false;
-			
-			PrivateDependencyModuleNames.AddRange(
-				new[]
-				{
-					"Core",
-					"CoreUObject",
-					"Engine",
-					
-					"DeveloperSettings",
-					"GameplayAbilities",
-					
-					"RemCommon",
-				}
-			);
-		}
+		ShadowVariableWarningLevel = WarningLevel.Error;
+		IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
+		DefaultBuildSettings = BuildSettingsVersion.Latest;
+		CppStandard = CppStandardVersion.EngineDefault;
+		UnsafeTypeCastWarningLevel = WarningLevel.Warning;
+		
+		bEnableNonInlinedGenCppWarnings = true;
+		bUseUnity = false;
+		
+		PrivateDependencyModuleNames.AddRange(
+			new[]
+			{
+				"Core",
+				"CoreUObject",
+				"Engine",
+				
+				"DeveloperSettings",
+				"GameplayAbilities",
+				
+				"RemCommon",
+			}
+		);
 	}
 }
