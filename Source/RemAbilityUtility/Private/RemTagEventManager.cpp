@@ -52,9 +52,25 @@ void FRemScopedAbilityTagEventManager::RegisterEvent(const FGameplayTag& Tag, co
 
 #endif
 
+	auto* ExistingHandle = EventHandleMap.Find(Tag);
+	if (ExistingHandle)
+	{
+		AbilitySystem->UnregisterGameplayTagEvent(*ExistingHandle, Tag, EventType);
+
+		REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose, TEXT("{0} TagEvent:{1}, already registerred with delegate handle:{2}, removed"),
+			EventType, Tag, *ExistingHandle);
+	}
+
 	const auto DelegateHandle = AbilitySystem->RegisterGameplayTagEvent(Tag, EventType).Add(Delegate);
 
-	EventHandleMap.FindOrAdd(Tag, DelegateHandle);
+	if (!ExistingHandle)
+	{
+		EventHandleMap.Add(Tag, DelegateHandle);
+	}
+	else
+	{
+		*ExistingHandle = DelegateHandle;
+	}
 
 	REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose, TEXT("register {0} TagEvent:{1}, delegate handle:{2}"), EventType, Tag, DelegateHandle);
 }
@@ -99,7 +115,7 @@ bool FRemScopedAbilityTagEventManager::UnRegisterEvent(const FGameplayTag& Tag, 
 
 	if (const auto* DelegateHandle = EventHandleMap.Find(Tag))
 	{
-		auto bSucceed = AbilitySystem->RegisterGameplayTagEvent(Tag, EventType).Remove(*DelegateHandle);
+		auto bSucceed = AbilitySystem->UnregisterGameplayTagEvent(*DelegateHandle, Tag, EventType);
 
 		REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose, TEXT("unregister {0} TagEvent:{1}, delegate handle:{2}, succeed?:{3}"),
 					EGameplayTagEventType::NewOrRemoved, Tag, *DelegateHandle, bSucceed);
@@ -125,11 +141,11 @@ void FRemScopedAbilityTagEventManager::UnRegisterEvents()
 		{
 			auto& Tag = Data.Key;
 			auto& DelegateHandle = Data.Value;
-			if (bool bSucceed{AbilitySystem->RegisterGameplayTagEvent(Data.Key, EGameplayTagEventType::NewOrRemoved)
-					.Remove(Data.Value)};
+			if (bool bSucceed{AbilitySystem->UnregisterGameplayTagEvent(Data.Value, Data.Key, EGameplayTagEventType::NewOrRemoved)};
 				!bSucceed)
 			{
-				bSucceed = AbilitySystem->RegisterGameplayTagEvent(Data.Key, EGameplayTagEventType::AnyCountChange).Remove(Data.Value);
+				bSucceed = AbilitySystem->UnregisterGameplayTagEvent(Data.Value, Data.Key, EGameplayTagEventType::AnyCountChange);
+
 				REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose, TEXT("unregister {0} TagEvent:{1}, delegate handle:{2}, succeed?:{3}"),
 					EGameplayTagEventType::AnyCountChange, Tag, DelegateHandle, bSucceed);
 			}
@@ -163,8 +179,33 @@ void FRemScopedAbilityGameplayEventManager::RegisterEvent(const FGameplayTag& Ta
 
 #endif
 
+	auto* ExistingHandle = EventHandleMap.Find(Tag);
+	if (ExistingHandle)
+	{
+		if (auto* ExistedDelegate = AbilitySystem->GenericGameplayEventCallbacks.Find(Tag))
+		{
+			ExistedDelegate->Remove(*ExistingHandle);
+
+			REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose, TEXT("TagEvent:{0}, already registerred with delegate handle:{1}, removed"),
+				Tag, *ExistingHandle);
+		}
+		else
+		{
+			REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose, TEXT("TagEvent:{0}, already registerred with delegate handle:{1}, but ExistedDelegate not found"),
+				Tag, *ExistingHandle);
+		}
+	}
+
 	const auto DelegateHandle = AbilitySystem->GenericGameplayEventCallbacks.FindOrAdd(Tag).Add(Delegate);
-	EventHandleMap.FindOrAdd(Tag, DelegateHandle);
+
+	if (!ExistingHandle)
+	{
+		EventHandleMap.FindOrAdd(Tag, DelegateHandle);
+	}
+	else
+	{
+		*ExistingHandle = DelegateHandle;
+	}
 
 	REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose, TEXT("register GenericGameplayEvent:{0}, delegate handle:{1}"), Tag, DelegateHandle);
 }
