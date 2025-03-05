@@ -77,7 +77,6 @@ public:
 
 	void Reset();
 
-protected:
 	void UnRegisterEvents();
 };
 
@@ -112,6 +111,5 @@ public:
 
 	void Reset();
 
-protected:
 	void UnRegisterEvents();
 };
