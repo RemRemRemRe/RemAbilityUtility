@@ -16,8 +16,7 @@ public class RemAbilityUtility : ModuleRules
 		bUseUnity = false;
 		
 		PrivateDependencyModuleNames.AddRange(
-			new[]
-			{
+			[
 				"Core",
 				"CoreUObject",
 				"Engine",
@@ -26,7 +25,7 @@ public class RemAbilityUtility : ModuleRules
 				"GameplayAbilities",
 				
 				"RemCommon",
-			}
+			]
 		);
 	}
 }
