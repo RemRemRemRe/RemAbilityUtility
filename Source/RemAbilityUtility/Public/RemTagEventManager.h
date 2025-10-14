@@ -70,7 +70,7 @@ public:
 	void RegisterEventUnique(const FGameplayTag& Tag, const FEventDelegate& Delegate);
 
 	/**
-	 * it first try remove NewOrRemoved event, if failed, retry as AnyCountChange event
+	 * it first tries remove NewOrRemoved event, if failed, retry as AnyCountChange event
 	 */
 	bool UnRegisterEvent(const FGameplayTag& Tag);
 	bool UnRegisterEvent(const FGameplayTag& Tag, EGameplayTagEventType::Type EventType);
