@@ -29,12 +29,7 @@ protected:
 public:
 	explicit FRemAbilityEventManagerBase(UAbilitySystemComponent* InAbilitySystem = nullptr);
 
-	REM_DEFINE_CONST_ONLY_GETTERS_RETURN_REFERENCE_SIMPLE(AbilitySystem)
-
-	/**
-	 * @return true if AbilitySystem changed
-	 */
-	bool SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem);
+    REM_DEFINE_GETTERS_RETURN_VALUE(AbilitySystem, /* no suffix */, AbilitySystem.Get())
 
 	bool IsValid() const;
 };
@@ -56,7 +51,11 @@ public:
 	using FEventDelegate = TMulticastDelegate<void(const FGameplayTag, int32)>::FDelegate;
 	using Super::Super;
 
-	~FRemScopedAbilityTagEventManager();
+    FRemScopedAbilityTagEventManager(const FRemScopedAbilityTagEventManager& Other) = delete;
+    FRemScopedAbilityTagEventManager(FRemScopedAbilityTagEventManager&& Other) noexcept = delete;
+    FRemScopedAbilityTagEventManager& operator=(const FRemScopedAbilityTagEventManager& Other) = delete;
+    FRemScopedAbilityTagEventManager& operator=(FRemScopedAbilityTagEventManager&& Other) noexcept = delete;
+    ~FRemScopedAbilityTagEventManager() noexcept = default;
 
 	REM_DEFINE_CONST_ONLY_GETTERS_RETURN_REFERENCE_SIMPLE(EventHandleMap)
 
@@ -78,6 +77,12 @@ public:
 	void Reset();
 
 	void UnRegisterEvents();
+
+    /**
+     * it will call UnRegisterEvents if AbilitySystem changes
+	 * @return true if AbilitySystem changed
+	 */
+	bool SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem);
 };
 
 /**
@@ -97,7 +102,11 @@ public:
 	using FEventDelegate = TMulticastDelegate<void(const FGameplayEventData*)>::FDelegate;
 	using Super::Super;
 
-	~FRemScopedAbilityGameplayEventManager();
+    FRemScopedAbilityGameplayEventManager(const FRemScopedAbilityGameplayEventManager& Other) = delete;
+    FRemScopedAbilityGameplayEventManager(FRemScopedAbilityGameplayEventManager&& Other) noexcept = delete;
+    FRemScopedAbilityGameplayEventManager& operator=(const FRemScopedAbilityGameplayEventManager& Other) = delete;
+    FRemScopedAbilityGameplayEventManager& operator=(FRemScopedAbilityGameplayEventManager&& Other) noexcept = delete;
+    ~FRemScopedAbilityGameplayEventManager() noexcept = default;
 
 	REM_DEFINE_CONST_ONLY_GETTERS_RETURN_REFERENCE_SIMPLE(EventHandleMap)
 
@@ -112,4 +121,28 @@ public:
 	void Reset();
 
 	void UnRegisterEvents();
+
+    /**
+     * it will call UnRegisterEvents if AbilitySystem changes
+	 * @return true if AbilitySystem changed
+	 */
+	bool SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem);
+};
+
+template<>
+struct TStructOpsTypeTraits<FRemScopedAbilityTagEventManager> : TStructOpsTypeTraitsBase2<FRemScopedAbilityTagEventManager>
+{
+    enum
+    {
+        WithCopy = false
+    };
+};
+
+template<>
+struct TStructOpsTypeTraits<FRemScopedAbilityGameplayEventManager> : TStructOpsTypeTraitsBase2<FRemScopedAbilityGameplayEventManager>
+{
+    enum
+    {
+        WithCopy = false
+    };
 };

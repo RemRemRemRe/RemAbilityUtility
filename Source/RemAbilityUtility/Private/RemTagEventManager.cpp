@@ -16,26 +16,9 @@ FRemAbilityEventManagerBase::FRemAbilityEventManagerBase(UAbilitySystemComponent
 
 }
 
-bool FRemAbilityEventManagerBase::SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem)
-{
-	if (InAbilitySystem != AbilitySystem)
-	{
-		AbilitySystem = InAbilitySystem;
-
-		return true;
-	}
-
-	return false;
-}
-
 bool FRemAbilityEventManagerBase::IsValid() const
 {
 	return ::IsValid(AbilitySystem);
-}
-
-FRemScopedAbilityTagEventManager::~FRemScopedAbilityTagEventManager()
-{
-	Reset();
 }
 
 bool FRemScopedAbilityTagEventManager::HasEvent(const FGameplayTag& Tag) const
@@ -129,7 +112,6 @@ bool FRemScopedAbilityTagEventManager::UnRegisterEvent(const FGameplayTag& Tag, 
 
 void FRemScopedAbilityTagEventManager::Reset()
 {
-	UnRegisterEvents();
 	SetAbilitySystem(nullptr);
 }
 
@@ -161,9 +143,18 @@ void FRemScopedAbilityTagEventManager::UnRegisterEvents()
 	REM_LOG_FUNCTION(LogRemAbilityUtility, Log, TEXT("TagEventHandleMap reseted"));
 }
 
-FRemScopedAbilityGameplayEventManager::~FRemScopedAbilityGameplayEventManager()
+bool FRemScopedAbilityTagEventManager::SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem)
 {
-	Reset();
+    if (InAbilitySystem != AbilitySystem)
+    {
+        UnRegisterEvents();
+        
+        AbilitySystem = InAbilitySystem;
+
+        return true;
+    }
+
+    return false;
 }
 
 bool FRemScopedAbilityGameplayEventManager::HasEvent(const FGameplayTag& Tag) const
@@ -248,7 +239,6 @@ bool FRemScopedAbilityGameplayEventManager::UnRegisterEvent(const FGameplayTag& 
 
 void FRemScopedAbilityGameplayEventManager::Reset()
 {
-	UnRegisterEvents();
 	SetAbilitySystem(nullptr);
 }
 
@@ -270,4 +260,18 @@ void FRemScopedAbilityGameplayEventManager::UnRegisterEvents()
 
 	EventHandleMap.Reset();
 	REM_LOG_FUNCTION(LogRemAbilityUtility, Log, TEXT("GenericGameplayEventHandleMap reseted"));
+}
+
+bool FRemScopedAbilityGameplayEventManager::SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem)
+{
+    if (InAbilitySystem != AbilitySystem)
+    {
+        UnRegisterEvents();
+        
+        AbilitySystem = InAbilitySystem;
+
+        return true;
+    }
+
+    return false;
 }
