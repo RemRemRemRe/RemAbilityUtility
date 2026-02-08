@@ -40,7 +40,7 @@ void FRemScopedAbilityTagEventManager::RegisterEvent(const FGameplayTag& Tag, co
 	{
 		AbilitySystem->UnregisterGameplayTagEvent(*ExistingHandle, Tag, EventType);
 
-		REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose, TEXT("{0} TagEvent:{1}, already registerred with delegate handle:{2}, removed"),
+		REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose, TEXT("{0} TagEvent:{1}, already registered with delegate handle:{2}, removed"),
 			EventType, Tag, *ExistingHandle);
 	}
 
@@ -140,7 +140,7 @@ void FRemScopedAbilityTagEventManager::UnRegisterEvents()
 	}
 
 	EventHandleMap.Reset();
-	REM_LOG_FUNCTION(LogRemAbilityUtility, Log, TEXT("TagEventHandleMap reseted"));
+	REM_LOG_FUNCTION(LogRemAbilityUtility, Log, TEXT("TagEventHandleMap reset"));
 }
 
 bool FRemScopedAbilityTagEventManager::SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem)
@@ -177,12 +177,12 @@ void FRemScopedAbilityGameplayEventManager::RegisterEvent(const FGameplayTag& Ta
 		{
 			ExistedDelegate->Remove(*ExistingHandle);
 
-			REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose, TEXT("TagEvent:{0}, already registerred with delegate handle:{1}, removed"),
+			REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose, TEXT("TagEvent:{0}, already registered with delegate handle:{1}, removed"),
 				Tag, *ExistingHandle);
 		}
 		else
 		{
-			REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose, TEXT("TagEvent:{0}, already registerred with delegate handle:{1}, but ExistedDelegate not found"),
+			REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose, TEXT("TagEvent:{0}, already registered with delegate handle:{1}, but ExistedDelegate not found"),
 				Tag, *ExistingHandle);
 		}
 	}
@@ -259,7 +259,7 @@ void FRemScopedAbilityGameplayEventManager::UnRegisterEvents()
 	}
 
 	EventHandleMap.Reset();
-	REM_LOG_FUNCTION(LogRemAbilityUtility, Log, TEXT("GenericGameplayEventHandleMap reseted"));
+	REM_LOG_FUNCTION(LogRemAbilityUtility, Log, TEXT("GenericGameplayEventHandleMap reset"));
 }
 
 bool FRemScopedAbilityGameplayEventManager::SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem)
