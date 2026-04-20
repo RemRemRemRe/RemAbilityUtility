@@ -8,49 +8,52 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(RemAbilityUtilityStatics)
 
-bool Rem::Ability::HasAnyMatchingQueryTag(const UAbilitySystemComponent& AbilitySystem, const FGameplayTagQuery& TagQuery)
+bool Rem::Ability::HasAnyMatchingQueryTag(const UAbilitySystemComponent& AbilitySystem,
+    const FGameplayTagQuery& TagQuery)
 {
-	return HasAnyMatchingTags(AbilitySystem, TagQuery.GetGameplayTagArray());
+    return HasAnyMatchingTags(AbilitySystem, TagQuery.GetGameplayTagArray());
 }
 
 bool Rem::Ability::HasAllMatchingQueryTag(const UAbilitySystemComponent& AbilitySystem,
-	const FGameplayTagQuery& TagQuery)
+    const FGameplayTagQuery& TagQuery)
 {
-	return HasAllMatchingTags(AbilitySystem, TagQuery.GetGameplayTagArray());
+    return HasAllMatchingTags(AbilitySystem, TagQuery.GetGameplayTagArray());
 }
 
-bool Rem::Ability::HasAnyMatchingTags(const UAbilitySystemComponent& AbilitySystem, const TConstArrayView<FGameplayTag> Tags)
+bool Rem::Ability::HasAnyMatchingTags(const UAbilitySystemComponent& AbilitySystem,
+    const TConstArrayView<FGameplayTag> Tags)
 {
-	if (Tags.IsEmpty())
-	{
-		return true;
-	}
+    if (Tags.IsEmpty())
+    {
+        return true;
+    }
 
-	for (auto& Tag : Tags)
-	{
-		if (AbilitySystem.GetTagCount(Tag) > 0)
-		{
-			return true;
-		}
-	}
+    for (auto& Tag : Tags)
+    {
+        if (AbilitySystem.GetTagCount(Tag) > 0)
+        {
+            return true;
+        }
+    }
 
-	return false;
+    return false;
 }
 
-bool Rem::Ability::HasAllMatchingTags(const UAbilitySystemComponent& AbilitySystem, const TConstArrayView<FGameplayTag> Tags)
+bool Rem::Ability::HasAllMatchingTags(const UAbilitySystemComponent& AbilitySystem,
+    const TConstArrayView<FGameplayTag> Tags)
 {
-	if (Tags.IsEmpty())
-	{
-		return true;
-	}
+    if (Tags.IsEmpty())
+    {
+        return true;
+    }
 
-	for (auto& Tag : Tags)
-	{
-		if (AbilitySystem.GetTagCount(Tag) == 0)
-		{
-			return false;
-		}
-	}
+    for (auto& Tag : Tags)
+    {
+        if (AbilitySystem.GetTagCount(Tag) == 0)
+        {
+            return false;
+        }
+    }
 
-	return true;
+    return true;
 }

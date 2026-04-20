@@ -8,5 +8,5 @@
 UCLASS(Config = RemAbilityUtilityTags)
 class REMABILITYUTILITY_API URemAbilityUtilityTags : public URemMetaTags
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 };

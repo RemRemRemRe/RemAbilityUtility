@@ -12,7 +12,7 @@ struct FGameplayEventData;
 
 namespace EGameplayTagEventType
 {
-	enum Type : int;
+enum Type : int;
 }
 
 class UAbilitySystemComponent;
@@ -20,18 +20,18 @@ class UAbilitySystemComponent;
 USTRUCT(BlueprintType)
 struct REMABILITYUTILITY_API FRemAbilityEventManagerBase
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rem", meta = (AllowPrivateAccess, ShowInnerProperties))
-	TObjectPtr<UAbilitySystemComponent> AbilitySystem{};
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rem", meta = (AllowPrivateAccess, ShowInnerProperties))
+    TObjectPtr<UAbilitySystemComponent> AbilitySystem{};
 
 public:
-	explicit FRemAbilityEventManagerBase(UAbilitySystemComponent* InAbilitySystem = nullptr);
+    explicit FRemAbilityEventManagerBase(UAbilitySystemComponent* InAbilitySystem = nullptr);
 
     REM_DEFINE_GETTERS_RETURN_VALUE(AbilitySystem, /* no suffix */, AbilitySystem.Get())
 
-	bool IsValid() const;
+    bool IsValid() const;
 };
 
 /**
@@ -42,47 +42,49 @@ public:
 USTRUCT(BlueprintType)
 struct REMABILITYUTILITY_API FRemScopedAbilityTagEventManager : public FRemAbilityEventManagerBase
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 private:
-	TMap<FGameplayTag, FDelegateHandle> EventHandleMap{};
+    TMap<FGameplayTag, FDelegateHandle> EventHandleMap{};
 
 public:
-	using FEventDelegate = TMulticastDelegate<void(const FGameplayTag, int32)>::FDelegate;
-	using Super::Super;
+    using FEventDelegate = TMulticastDelegate<void(const FGameplayTag, int32)>::FDelegate;
+    using Super::Super;
 
-    FRemScopedAbilityTagEventManager(const FRemScopedAbilityTagEventManager& Other) = delete;
-    FRemScopedAbilityTagEventManager(FRemScopedAbilityTagEventManager&& Other) noexcept = delete;
-    FRemScopedAbilityTagEventManager& operator=(const FRemScopedAbilityTagEventManager& Other) = delete;
+    FRemScopedAbilityTagEventManager(const FRemScopedAbilityTagEventManager& Other)                = delete;
+    FRemScopedAbilityTagEventManager(FRemScopedAbilityTagEventManager&& Other) noexcept            = delete;
+    FRemScopedAbilityTagEventManager& operator=(const FRemScopedAbilityTagEventManager& Other)     = delete;
     FRemScopedAbilityTagEventManager& operator=(FRemScopedAbilityTagEventManager&& Other) noexcept = delete;
-    ~FRemScopedAbilityTagEventManager() noexcept = default;
+    ~FRemScopedAbilityTagEventManager() noexcept                                                   = default;
 
-	REM_DEFINE_CONST_ONLY_GETTERS_RETURN_REFERENCE_SIMPLE(EventHandleMap)
+    REM_DEFINE_CONST_ONLY_GETTERS_RETURN_REFERENCE_SIMPLE(EventHandleMap)
 
-	bool HasEvent(const FGameplayTag& Tag) const;
+    bool HasEvent(const FGameplayTag& Tag) const;
 
-	// WILL override events if bound
-	void RegisterEvent(const FGameplayTag& Tag, EGameplayTagEventType::Type EventType, const FEventDelegate& Delegate);
-	void RegisterEvent(const FGameplayTag& Tag, const FEventDelegate& Delegate);
-	// won't override events if bound
-	void RegisterEventUnique(const FGameplayTag& Tag, EGameplayTagEventType::Type EventType, const FEventDelegate& Delegate);
-	void RegisterEventUnique(const FGameplayTag& Tag, const FEventDelegate& Delegate);
+    // WILL override events if bound
+    void RegisterEvent(const FGameplayTag& Tag, EGameplayTagEventType::Type EventType,
+        const FEventDelegate& Delegate);
+    void RegisterEvent(const FGameplayTag& Tag, const FEventDelegate& Delegate);
+    // won't override events if bound
+    void RegisterEventUnique(const FGameplayTag& Tag, EGameplayTagEventType::Type EventType,
+        const FEventDelegate& Delegate);
+    void RegisterEventUnique(const FGameplayTag& Tag, const FEventDelegate& Delegate);
 
-	/**
-	 * it first tries remove NewOrRemoved event, if failed, retry as AnyCountChange event
-	 */
-	bool UnRegisterEvent(const FGameplayTag& Tag);
-	bool UnRegisterEvent(const FGameplayTag& Tag, EGameplayTagEventType::Type EventType);
+    /**
+     * it first tries remove NewOrRemoved event, if failed, retry as AnyCountChange event
+     */
+    bool UnRegisterEvent(const FGameplayTag& Tag);
+    bool UnRegisterEvent(const FGameplayTag& Tag, EGameplayTagEventType::Type EventType);
 
-	void Reset();
+    void Reset();
 
-	void UnRegisterEvents();
+    void UnRegisterEvents();
 
     /**
      * it will call UnRegisterEvents if AbilitySystem changes
 	 * @return true if AbilitySystem changed
 	 */
-	bool SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem);
+    bool SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem);
 };
 
 /**
@@ -93,44 +95,47 @@ public:
 USTRUCT(BlueprintType)
 struct REMABILITYUTILITY_API FRemScopedAbilityGameplayEventManager : public FRemAbilityEventManagerBase
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 private:
-	TMap<FGameplayTag, FDelegateHandle> EventHandleMap{};
+    TMap<FGameplayTag, FDelegateHandle> EventHandleMap{};
 
 public:
-	using FEventDelegate = TMulticastDelegate<void(const FGameplayEventData*)>::FDelegate;
-	using Super::Super;
+    using FEventDelegate = TMulticastDelegate<void(const FGameplayEventData*)>::FDelegate;
+    using Super::Super;
 
-    FRemScopedAbilityGameplayEventManager(const FRemScopedAbilityGameplayEventManager& Other) = delete;
+    FRemScopedAbilityGameplayEventManager(const FRemScopedAbilityGameplayEventManager& Other)     = delete;
     FRemScopedAbilityGameplayEventManager(FRemScopedAbilityGameplayEventManager&& Other) noexcept = delete;
-    FRemScopedAbilityGameplayEventManager& operator=(const FRemScopedAbilityGameplayEventManager& Other) = delete;
-    FRemScopedAbilityGameplayEventManager& operator=(FRemScopedAbilityGameplayEventManager&& Other) noexcept = delete;
-    ~FRemScopedAbilityGameplayEventManager() noexcept = default;
+    FRemScopedAbilityGameplayEventManager&
+    operator=(const FRemScopedAbilityGameplayEventManager& Other) = delete;
+    FRemScopedAbilityGameplayEventManager&
+    operator=(FRemScopedAbilityGameplayEventManager&& Other) noexcept = delete;
+    ~FRemScopedAbilityGameplayEventManager() noexcept                 = default;
 
-	REM_DEFINE_CONST_ONLY_GETTERS_RETURN_REFERENCE_SIMPLE(EventHandleMap)
+    REM_DEFINE_CONST_ONLY_GETTERS_RETURN_REFERENCE_SIMPLE(EventHandleMap)
 
-	bool HasEvent(const FGameplayTag& Tag) const;
+    bool HasEvent(const FGameplayTag& Tag) const;
 
-	// WILL override events if bound
-	void RegisterEvent(const FGameplayTag& Tag, const FEventDelegate& Delegate);
-	// won't override events if bound
-	void RegisterEventUnique(const FGameplayTag& Tag, const FEventDelegate& Delegate);
-	bool UnRegisterEvent(const FGameplayTag& Tag);
+    // WILL override events if bound
+    void RegisterEvent(const FGameplayTag& Tag, const FEventDelegate& Delegate);
+    // won't override events if bound
+    void RegisterEventUnique(const FGameplayTag& Tag, const FEventDelegate& Delegate);
+    bool UnRegisterEvent(const FGameplayTag& Tag);
 
-	void Reset();
+    void Reset();
 
-	void UnRegisterEvents();
+    void UnRegisterEvents();
 
     /**
      * it will call UnRegisterEvents if AbilitySystem changes
 	 * @return true if AbilitySystem changed
 	 */
-	bool SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem);
+    bool SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem);
 };
 
-template<>
-struct TStructOpsTypeTraits<FRemScopedAbilityTagEventManager> : TStructOpsTypeTraitsBase2<FRemScopedAbilityTagEventManager>
+template <>
+struct TStructOpsTypeTraits<
+        FRemScopedAbilityTagEventManager> : TStructOpsTypeTraitsBase2<FRemScopedAbilityTagEventManager>
 {
     enum
     {
@@ -138,8 +143,9 @@ struct TStructOpsTypeTraits<FRemScopedAbilityTagEventManager> : TStructOpsTypeTr
     };
 };
 
-template<>
-struct TStructOpsTypeTraits<FRemScopedAbilityGameplayEventManager> : TStructOpsTypeTraitsBase2<FRemScopedAbilityGameplayEventManager>
+template <>
+struct TStructOpsTypeTraits<
+        FRemScopedAbilityGameplayEventManager> : TStructOpsTypeTraitsBase2<FRemScopedAbilityGameplayEventManager>
 {
     enum
     {
