@@ -42,7 +42,7 @@ void FRemScopedAbilityTagEventManager::RegisterEvent(const FGameplayTag& Tag,
         AbilitySystem->UnregisterGameplayTagEvent(*ExistingHandle, Tag, EventType);
 
         REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose,
-            TEXT("{0} TagEvent:{1}, already registered with delegate handle:{2}, removed"),
+            "{0} TagEvent:{1}, already registered with delegate handle:{2}, removed",
             EventType, Tag, *ExistingHandle);
     }
 
@@ -57,7 +57,7 @@ void FRemScopedAbilityTagEventManager::RegisterEvent(const FGameplayTag& Tag,
         *ExistingHandle = DelegateHandle;
     }
 
-    REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose, TEXT("register {0} TagEvent:{1}, delegate handle:{2}"), EventType,
+    REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose, "register {0} TagEvent:{1}, delegate handle:{2}", EventType,
         Tag, DelegateHandle);
 }
 
@@ -77,7 +77,7 @@ void FRemScopedAbilityTagEventManager::RegisterEventUnique(const FGameplayTag& T
     else
     {
         REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose,
-            TEXT("trying of register {0} TagEvent:{1}, ignored, previous delegate handle:{2}"),
+            "trying of register {0} TagEvent:{1}, ignored, previous delegate handle:{2}",
             EventType, Tag, EventHandleMap.FindChecked(Tag));
     }
 }
@@ -108,7 +108,7 @@ bool FRemScopedAbilityTagEventManager::UnRegisterEvent(const FGameplayTag& Tag,
         auto bSucceed = AbilitySystem->UnregisterGameplayTagEvent(*DelegateHandle, Tag, EventType);
 
         REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose,
-            TEXT("unregister {0} TagEvent:{1}, delegate handle:{2}, succeed?:{3}"),
+            "unregister {0} TagEvent:{1}, delegate handle:{2}, succeed?:{3}",
             EGameplayTagEventType::NewOrRemoved, Tag, *DelegateHandle, bSucceed);
 
         EventHandleMap.Remove(Tag);
@@ -140,20 +140,20 @@ void FRemScopedAbilityTagEventManager::UnRegisterEvents()
                     EGameplayTagEventType::AnyCountChange);
 
                 REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose,
-                    TEXT("unregister {0} TagEvent:{1}, delegate handle:{2}, succeed?:{3}"),
+                    "unregister {0} TagEvent:{1}, delegate handle:{2}, succeed?:{3}",
                     EGameplayTagEventType::AnyCountChange, Tag, DelegateHandle, bSucceed);
             }
             else
             {
                 REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose,
-                    TEXT("unregister {0} TagEvent:{1}, delegate handle:{2}, succeed?:{3}"),
+                    "unregister {0} TagEvent:{1}, delegate handle:{2}, succeed?:{3}",
                     EGameplayTagEventType::NewOrRemoved, Tag, DelegateHandle, bSucceed);
             }
         }
     }
 
     EventHandleMap.Reset();
-    REM_LOG_FUNCTION(LogRemAbilityUtility, Log, TEXT("TagEventHandleMap reset"));
+    REM_LOG_FUNCTION(LogRemAbilityUtility, Log, "TagEventHandleMap reset");
 }
 
 bool FRemScopedAbilityTagEventManager::SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem)
@@ -192,13 +192,13 @@ void FRemScopedAbilityGameplayEventManager::RegisterEvent(const FGameplayTag& Ta
             ExistedDelegate->Remove(*ExistingHandle);
 
             REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose,
-                TEXT("TagEvent:{0}, already registered with delegate handle:{1}, removed"),
+                "TagEvent:{0}, already registered with delegate handle:{1}, removed",
                 Tag, *ExistingHandle);
         }
         else
         {
             REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose,
-                TEXT("TagEvent:{0}, already registered with delegate handle:{1}, but ExistedDelegate not found"),
+                "TagEvent:{0}, already registered with delegate handle:{1}, but ExistedDelegate not found",
                 Tag, *ExistingHandle);
         }
     }
@@ -214,7 +214,7 @@ void FRemScopedAbilityGameplayEventManager::RegisterEvent(const FGameplayTag& Ta
         *ExistingHandle = DelegateHandle;
     }
 
-    REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose, TEXT("register GenericGameplayEvent:{0}, delegate handle:{1}"), Tag,
+    REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose, "register GenericGameplayEvent:{0}, delegate handle:{1}", Tag,
         DelegateHandle);
 }
 
@@ -228,7 +228,7 @@ void FRemScopedAbilityGameplayEventManager::RegisterEventUnique(const FGameplayT
     else
     {
         REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose,
-            TEXT("trying of register GenericGameplayEvent:{0}, ignored, previous delegate handle:{1}"),
+            "trying of register GenericGameplayEvent:{0}, ignored, previous delegate handle:{1}",
             Tag, EventHandleMap.FindChecked(Tag));
     }
 }
@@ -250,7 +250,7 @@ bool FRemScopedAbilityGameplayEventManager::UnRegisterEvent(const FGameplayTag& 
         };
 
         REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose,
-            TEXT("unregister GenericGameplayEvent:{0}, delegate handle:{1}, succeed?:{2}"),
+            "unregister GenericGameplayEvent:{0}, delegate handle:{1}, succeed?:{2}",
             Tag, *DelegateHandle, bSucceed);
 
         EventHandleMap.Remove(Tag);
@@ -280,13 +280,13 @@ void FRemScopedAbilityGameplayEventManager::UnRegisterEvents()
             };
 
             REM_LOG_FUNCTION(LogRemAbilityUtility, Verbose,
-                TEXT("unregister GenericGameplayEvent:{0}, delegate handle:{1}, succeed?:{2}"),
+                "unregister GenericGameplayEvent:{0}, delegate handle:{1}, succeed?:{2}",
                 Tag, DelegateHandle, bSucceed);
         }
     }
 
     EventHandleMap.Reset();
-    REM_LOG_FUNCTION(LogRemAbilityUtility, Log, TEXT("GenericGameplayEventHandleMap reset"));
+    REM_LOG_FUNCTION(LogRemAbilityUtility, Log, "GenericGameplayEventHandleMap reset");
 }
 
 bool FRemScopedAbilityGameplayEventManager::SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem)
