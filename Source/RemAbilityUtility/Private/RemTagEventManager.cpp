@@ -1,4 +1,4 @@
-﻿// Copyright RemRemRemRe. 2025. All Rights Reserved.
+// Copyright RemRemRemRe. 2025. All Rights Reserved.
 
 
 #include "RemTagEventManager.h"
@@ -111,7 +111,12 @@ bool FRemScopedAbilityTagEventManager::UnRegisterEvent(const FGameplayTag& Tag,
             "unregister {0} TagEvent:{1}, delegate handle:{2}, succeed?:{3}",
             EGameplayTagEventType::NewOrRemoved, Tag, *DelegateHandle, bSucceed);
 
-        EventHandleMap.Remove(Tag);
+        // keep the handle on failure so UnRegisterEvent(Tag) can retry with
+        // AnyCountChange (the documented fallback)
+        if (bSucceed)
+        {
+            EventHandleMap.Remove(Tag);
+        }
         return bSucceed;
     }
 
@@ -253,7 +258,11 @@ bool FRemScopedAbilityGameplayEventManager::UnRegisterEvent(const FGameplayTag& 
             "unregister GenericGameplayEvent:{0}, delegate handle:{1}, succeed?:{2}",
             Tag, *DelegateHandle, bSucceed);
 
-        EventHandleMap.Remove(Tag);
+        // keep the handle on failure so the binding stays tracked
+        if (bSucceed)
+        {
+            EventHandleMap.Remove(Tag);
+        }
         return bSucceed;
     }
 
