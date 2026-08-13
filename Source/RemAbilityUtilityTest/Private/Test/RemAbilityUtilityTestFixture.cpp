@@ -4,7 +4,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "Engine/World.h"
-#include "GameplayTagsManager.h"
+#include "RemTestGameplayTags.h"
 
 namespace Rem::AbilityUtility::Private
 {
@@ -30,14 +30,6 @@ UAbilitySystemComponent& FRemAbilityUtilityTestFixture::GetAbilitySystem() const
 
 FGameplayTag FRemAbilityUtilityTestFixture::AddNativeTag(const FStringView TagName)
 {
-    auto& TagsManager = UGameplayTagsManager::Get();
-
-    if (const auto ExistingTag = TagsManager.RequestGameplayTag(FName{TagName}, false);
-        ExistingTag.IsValid())
-    {
-        return ExistingTag;
-    }
-
-    return TagsManager.AddNativeGameplayTag(FName{TagName});
+    return Rem::Test::AddNativeTag(FName{TagName});
 }
 }
