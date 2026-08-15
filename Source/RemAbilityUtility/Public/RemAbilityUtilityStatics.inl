@@ -46,12 +46,21 @@ bool HasMatchingGameplayTags(const TNotNull<UAbilitySystemComponent*> AbilitySys
 }
 
 /**
- * FGameplayTagQuery overload for consistent API
+ * FGameplayTag overload for consistent API
  */
 template <Enum::ELogicOperator MatchMode = Enum::ELogicOperator::All>
 bool HasMatchingGameplayTags(const TNotNull<UAbilitySystemComponent*> AbilitySystem, const FGameplayTag& Tag)
 {
-    return AbilitySystem->HasMatchingGameplayTag(Tag);
+    if constexpr (MatchMode == Enum::ELogicOperator::All || MatchMode == Enum::ELogicOperator::Any)
+    {
+        return AbilitySystem->HasMatchingGameplayTag(Tag);
+    }
+    else
+    {
+        static_assert(MatchMode == Enum::ELogicOperator::None);
+
+        return !AbilitySystem->HasMatchingGameplayTag(Tag);
+    }
 }
 
 }
