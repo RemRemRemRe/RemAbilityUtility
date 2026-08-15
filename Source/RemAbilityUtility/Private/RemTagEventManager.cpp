@@ -258,11 +258,11 @@ bool FRemScopedAbilityGameplayEventManager::UnRegisterEvent(const FGameplayTag& 
             "unregister GenericGameplayEvent:{0}, delegate handle:{1}, succeed?:{2}",
             Tag, *DelegateHandle, bSucceed);
 
-        // keep the handle on failure so the binding stays tracked
-        if (bSucceed)
-        {
-            EventHandleMap.Remove(Tag);
-        }
+        // drop the tracked handle either way: success means we removed it,
+        // failure means it was already unbound externally — the binding is gone
+        // in both cases, so keeping a stale entry would make HasEvent() lie
+        EventHandleMap.Remove(Tag);
+
         return bSucceed;
     }
 
