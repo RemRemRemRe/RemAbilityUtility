@@ -2,6 +2,9 @@
 
 #include "RemAbilityUtilityModule.h"
 #include "Modules/ModuleManager.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "Interface/IRemGameplayTagEventSource.h"
+#include "RemAbilityGameplayTagEventSource.h"
 
 IRemAbilityUtilityModule& IRemAbilityUtilityModule::Get()
 {
@@ -27,6 +30,18 @@ void FRemAbilityUtilityModule::StartupModule()
 {
     // This code will execute after your module is loaded into memory (but after global variables are initialized, of course.)
     IRemAbilityUtilityModule::StartupModule();
+
+    // provide the ASC-backed fallback gameplay tag event source (used by RemGameplayCamera)
+    Rem::Tag::SetGameplayTagEventSourceProvider(
+        [](AActor* Actor) -> TUniquePtr<IRemGameplayTagEventSource>
+        {
+            if (auto* AbilitySystem = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor))
+            {
+                return MakeUnique<FRemAbilityGameplayTagEventSource>(AbilitySystem);
+            }
+
+            return nullptr;
+        });
 }
 
 void FRemAbilityUtilityModule::ShutdownModule()
