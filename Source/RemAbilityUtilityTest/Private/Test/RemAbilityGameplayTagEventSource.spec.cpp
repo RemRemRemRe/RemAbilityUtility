@@ -1,4 +1,4 @@
-﻿// Copyright RemRemRemRe. 2026. All Rights Reserved.
+// Copyright RemRemRemRe. 2026. All Rights Reserved.
 
 #include "Test/RemAbilityUtilityTestFixture.h"
 
@@ -9,7 +9,7 @@
 #include "GameplayTagContainer.h"
 #include "Interface/RemTagEventSourceInterface.h"
 #include "GameplayTag/RemTagEventLifetimeBoundInterfacePtr.h"
-#include "GameplayTag/RemTagEventSourceProvider.h"
+#include "GameplayTag/RemTagEventSourceFeature.h"
 #include "Misc/AutomationTest.h"
 #include "RemAbilityGameplayTagEventSource.h"
 
@@ -354,40 +354,8 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
 
     Describe(TEXT("Fallback provider"), [this]
     {
-        BeforeEach([this]
-        {
-            // restore the module-registered fallback provider: other test modules (e.g. the
-            // camera suite) set and clear this global, and UE automation does not guarantee
-            // cross-module order — keep this Describe self-contained
-            Rem::GameplayTag::SetTagEventSourceProvider(
-                [](AActor* Actor) -> Rem::GameplayTag::FLifetimeBoundInterfacePtr
-                {
-                    auto* AbilitySystem = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor);
-                    if (!AbilitySystem)
-                    {
-                        return {};
-                    }
-
-                    // reuse an existing component if already attached (avoid duplicates on re-detection)
-                    if (auto* Existing = Actor->FindComponentByClass<URemAbilityGameplayTagEventSource>())
-                    {
-                        return Existing->GetLifetimeBoundObjectPtr<IRemTagEventSourceInterface>();
-                    }
-
-                    auto* TagEventSource = NewObject<URemAbilityGameplayTagEventSource>(Actor,
-                        URemAbilityGameplayTagEventSource::StaticClass(), NAME_None, RF_Transient);
-                    TagEventSource->SetAbilitySystem(AbilitySystem);
-                    Actor->AddInstanceComponent(TagEventSource);
-                    TagEventSource->RegisterComponent();
-
-                    return TagEventSource->GetLifetimeBoundObjectPtr<IRemTagEventSourceInterface>();
-                });
-        });
-
-        AfterEach([this]
-        {
-            Rem::GameplayTag::SetTagEventSourceProvider({});
-        });
+        // the module's own contribution is registered for its whole lifetime, so this suite needs no
+        // setup and cannot be disturbed by another module's registrations
 
         It(TEXT("should create a source component on an actor that has an ability system"), [this]
         {
