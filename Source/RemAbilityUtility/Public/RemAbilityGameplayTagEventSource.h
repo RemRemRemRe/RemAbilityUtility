@@ -29,7 +29,6 @@ class REMABILITYUTILITY_API URemAbilityGameplayTagEventSource final
 {
     GENERATED_BODY()
 
-private:
     struct FRegistration
     {
         FGameplayTag Tag;
