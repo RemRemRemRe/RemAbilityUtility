@@ -11,6 +11,20 @@ void URemAbilityGameplayTagEventSource::SetAbilitySystem(UAbilitySystemComponent
     AbilitySystem = InAbilitySystem;
 }
 
+void URemAbilityGameplayTagEventSource::OnComponentDestroyed(bool bDestroyingHierarchy)
+{
+    UnregisterAllTagEvents();
+
+    Super::OnComponentDestroyed(bDestroyingHierarchy);
+}
+
+void URemAbilityGameplayTagEventSource::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    UnregisterAllTagEvents();
+
+    Super::EndPlay(EndPlayReason);
+}
+
 const FGameplayTagContainer& URemAbilityGameplayTagEventSource::GetOwnedTags() const
 {
     static const FGameplayTagContainer EmptyTags{};
@@ -37,32 +51,28 @@ void URemAbilityGameplayTagEventSource::RemoveOwnedTags(const FGameplayTagContai
 FDelegateHandle URemAbilityGameplayTagEventSource::RegisterTagEvent(const FGameplayTag& Tag,
     const FEventDelegate& Delegate)
 {
-    // won't override an existing registration (mirrors FRemScopedAbilityTagEventManager::RegisterEventUnique)
-    if (const auto* ExistingHandle = EventHandleMap.Find(Tag))
-    {
-        return *ExistingHandle;
-    }
-
+    // multiple listeners per tag are allowed (asset-group and setting-value scopes may share a tag);
+    // the handle is the per-registration ASC multicast handle
     const auto DelegateHandle = AbilitySystem->RegisterGameplayTagEvent(Tag,
         EGameplayTagEventType::NewOrRemoved).Add(Delegate);
-    EventHandleMap.Add(Tag, DelegateHandle);
+    HandleToTagMap.Add(DelegateHandle, Tag);
 
     return DelegateHandle;
 }
 
-void URemAbilityGameplayTagEventSource::UnregisterTagEvent(const FGameplayTag& Tag)
+void URemAbilityGameplayTagEventSource::UnregisterTagEvent(FDelegateHandle Handle)
 {
-    if (auto* Handle = EventHandleMap.Find(Tag))
+    if (const auto* Tag = HandleToTagMap.Find(Handle))
     {
-        auto bSucceed = AbilitySystem->UnregisterGameplayTagEvent(*Handle, Tag,
+        auto bSucceed = AbilitySystem->UnregisterGameplayTagEvent(Handle, *Tag,
             EGameplayTagEventType::NewOrRemoved);
         if (!bSucceed)
         {
-            bSucceed = AbilitySystem->UnregisterGameplayTagEvent(*Handle, Tag,
+            bSucceed = AbilitySystem->UnregisterGameplayTagEvent(Handle, *Tag,
                 EGameplayTagEventType::AnyCountChange);
         }
 
-        EventHandleMap.Remove(Tag);
+        HandleToTagMap.Remove(Handle);
     }
 }
 
@@ -70,17 +80,17 @@ void URemAbilityGameplayTagEventSource::UnregisterAllTagEvents()
 {
     if (!AbilitySystem)
     {
-        EventHandleMap.Reset();
+        HandleToTagMap.Reset();
         return;
     }
 
-    for (auto It = EventHandleMap.CreateIterator(); It; ++It)
+    for (auto It = HandleToTagMap.CreateIterator(); It; ++It)
     {
-        auto bSucceed = AbilitySystem->UnregisterGameplayTagEvent(It.Value(), It.Key(),
+        auto bSucceed = AbilitySystem->UnregisterGameplayTagEvent(It.Key(), It.Value(),
             EGameplayTagEventType::NewOrRemoved);
         if (!bSucceed)
         {
-            bSucceed = AbilitySystem->UnregisterGameplayTagEvent(It.Value(), It.Key(),
+            bSucceed = AbilitySystem->UnregisterGameplayTagEvent(It.Key(), It.Value(),
                 EGameplayTagEventType::AnyCountChange);
         }
 

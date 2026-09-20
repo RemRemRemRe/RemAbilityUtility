@@ -13,7 +13,7 @@ class UAbilitySystemComponent;
  * AbilitySystemComponent-backed IRemGameplayTagEventSource
  *
  * mirrors FRemScopedAbilityTagEventManager semantics:
- * NewOrRemoved tag events, unique registration, unregister-all on destruction
+ * NewOrRemoved tag events, unregister-all on destruction
  *
  * lives as a component on the view target actor, so the camera's
  * TWeakInterfacePtr auto-invalidates when the actor dies
@@ -27,17 +27,22 @@ class REMABILITYUTILITY_API URemAbilityGameplayTagEventSource final
 public:
     void SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem);
 
+protected:
+    virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+public:
     // IRemGameplayTagEventSource
     const FGameplayTagContainer& GetOwnedTags() const override;
     void AddOwnedTags(const FGameplayTagContainer& Tags) override;
     void RemoveOwnedTags(const FGameplayTagContainer& Tags) override;
     FDelegateHandle RegisterTagEvent(const FGameplayTag& Tag, const FEventDelegate& Delegate) override;
-    void UnregisterTagEvent(const FGameplayTag& Tag) override;
+    void UnregisterTagEvent(FDelegateHandle Handle) override;
     void UnregisterAllTagEvents() override;
     AActor* GetAvatarActor() const override;
     bool IsValid() const override;
 
 private:
     TObjectPtr<UAbilitySystemComponent> AbilitySystem;
-    TMap<FGameplayTag, FDelegateHandle> EventHandleMap;
+    TMap<FDelegateHandle, FGameplayTag> HandleToTagMap;
 };

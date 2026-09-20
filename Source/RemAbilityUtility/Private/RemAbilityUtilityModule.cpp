@@ -41,6 +41,12 @@ void FRemAbilityUtilityModule::StartupModule()
                 return {};
             }
 
+            // reuse an existing component if already attached (avoid duplicates on re-detection)
+            if (auto* Existing = Actor->FindComponentByClass<URemAbilityGameplayTagEventSource>())
+            {
+                return TWeakInterfacePtr<IRemGameplayTagEventSource>{Existing};
+            }
+
             auto* TagEventSource = NewObject<URemAbilityGameplayTagEventSource>(Actor);
             TagEventSource->SetAbilitySystem(AbilitySystem);
             Actor->AddInstanceComponent(TagEventSource);
@@ -52,7 +58,8 @@ void FRemAbilityUtilityModule::StartupModule()
 
 void FRemAbilityUtilityModule::ShutdownModule()
 {
-    // This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
-    // we call this function before unloading the module.
+    // clear the registered provider so the RemCommon factory doesn't point into an unloaded DLL
+    Rem::Tag::SetGameplayTagEventSourceProvider({});
+
     IRemAbilityUtilityModule::ShutdownModule();
 }
