@@ -4,6 +4,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Interface/RemGameplayTagEventSource.h"
+#include "Interface/RemGameplayTagEventSourceProvider.h"
 #include "Modules/ModuleManager.h"
 #include "RemAbilityGameplayTagEventSource.h"
 
