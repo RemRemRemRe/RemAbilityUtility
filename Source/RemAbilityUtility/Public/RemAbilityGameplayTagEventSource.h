@@ -25,7 +25,7 @@ class UAbilitySystemComponent;
 UCLASS()
 class REMABILITYUTILITY_API URemAbilityGameplayTagEventSource final
     : public UActorComponent, public IRemTagEventSourceInterface, public IRemGetLifetimeBoundOwnerInterface,
-      public Rem::TGetLifetimeBoundObjectPtr<URemAbilityGameplayTagEventSource>
+      public Rem::TGetLifetimeBoundObjectPtr<URemAbilityGameplayTagEventSource, AActor>
 {
     GENERATED_BODY()
 
