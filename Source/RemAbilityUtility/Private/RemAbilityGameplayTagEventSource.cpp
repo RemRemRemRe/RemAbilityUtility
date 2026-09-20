@@ -100,7 +100,9 @@ void URemAbilityGameplayTagEventSource::UnregisterAllTagEvents()
 
 AActor* URemAbilityGameplayTagEventSource::GetAvatarActor() const
 {
-    return AbilitySystem ? AbilitySystem->GetAvatarActor() : GetOwner();
+    // identity = the view target actor the component lives on (not the ASC avatar,
+    // which may differ, e.g. an ASC on a PlayerState)
+    return GetOwner();
 }
 
 bool URemAbilityGameplayTagEventSource::IsValid() const

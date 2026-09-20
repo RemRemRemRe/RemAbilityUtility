@@ -18,7 +18,6 @@ public class RemAbilityUtility : ModuleRules
 				"DeveloperSettings",
 				"GameplayAbilities",
 				"GameplayTags",
-
 				"RemCommon",
 			]
 		);

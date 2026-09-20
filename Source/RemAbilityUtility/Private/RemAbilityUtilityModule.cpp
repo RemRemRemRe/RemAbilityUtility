@@ -1,9 +1,10 @@
 // Copyright RemRemRemRe. 2025. All Rights Reserved.
 
 #include "RemAbilityUtilityModule.h"
-#include "Modules/ModuleManager.h"
+
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Interface/RemGameplayTagEventSource.h"
+#include "Modules/ModuleManager.h"
 #include "RemAbilityGameplayTagEventSource.h"
 
 IRemAbilityUtilityModule& IRemAbilityUtilityModule::Get()
@@ -28,11 +29,10 @@ IMPLEMENT_MODULE(FRemAbilityUtilityModule, RemAbilityUtility)
 
 void FRemAbilityUtilityModule::StartupModule()
 {
-    // This code will execute after your module is loaded into memory (but after global variables are initialized, of course.)
     IRemAbilityUtilityModule::StartupModule();
 
     // provide the ASC-backed fallback gameplay tag event source (used by RemGameplayCamera)
-    Rem::Tag::SetGameplayTagEventSourceProvider(
+    Rem::GameplayTag::SetGameplayTagEventSourceProvider(
         [](AActor* Actor) -> TWeakInterfacePtr<IRemGameplayTagEventSource>
         {
             auto* AbilitySystem = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor);
@@ -47,7 +47,8 @@ void FRemAbilityUtilityModule::StartupModule()
                 return TWeakInterfacePtr<IRemGameplayTagEventSource>{Existing};
             }
 
-            auto* TagEventSource = NewObject<URemAbilityGameplayTagEventSource>(Actor);
+            auto* TagEventSource = NewObject<URemAbilityGameplayTagEventSource>(Actor,
+                URemAbilityGameplayTagEventSource::StaticClass(), NAME_None, RF_Transient);
             TagEventSource->SetAbilitySystem(AbilitySystem);
             Actor->AddInstanceComponent(TagEventSource);
             TagEventSource->RegisterComponent();
@@ -59,7 +60,7 @@ void FRemAbilityUtilityModule::StartupModule()
 void FRemAbilityUtilityModule::ShutdownModule()
 {
     // clear the registered provider so the RemCommon factory doesn't point into an unloaded DLL
-    Rem::Tag::SetGameplayTagEventSourceProvider({});
+    Rem::GameplayTag::SetGameplayTagEventSourceProvider({});
 
     IRemAbilityUtilityModule::ShutdownModule();
 }
