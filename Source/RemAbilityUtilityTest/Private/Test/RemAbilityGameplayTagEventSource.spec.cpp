@@ -7,9 +7,9 @@
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "GameplayTagContainer.h"
-#include "Interface/RemGameplayTagEventSource.h"
-#include "Interface/RemGameplayTagEventSourceHandle.h"
-#include "Interface/RemGameplayTagEventSourceProvider.h"
+#include "Interface/RemTagEventSourceInterface.h"
+#include "GameplayTag/RemTagEventLifetimeBoundInterfacePtr.h"
+#include "GameplayTag/RemTagEventSourceProvider.h"
 #include "Misc/AutomationTest.h"
 #include "RemAbilityGameplayTagEventSource.h"
 
@@ -18,7 +18,7 @@
 namespace
 {
 using Rem::AbilityUtility::Private::FRemAbilityUtilityTestFixture;
-using FTagEventDelegate = IRemGameplayTagEventSource::FEventDelegate;
+using FTagEventDelegate = IRemTagEventSourceInterface::FEventDelegate;
 
 URemAbilityGameplayTagEventSource* MakeTagEventSource(const FRemAbilityUtilityTestFixture& Fixture)
 {
@@ -327,7 +327,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             Source->RegisterComponent();
             Source->SetAbilitySystem(&Fixture.GetAbilitySystem());
 
-            const auto Handle = Source->GetLifetimeBoundObjectPtr<IRemGameplayTagEventSource>();
+            const auto Handle = Source->GetLifetimeBoundObjectPtr<IRemTagEventSourceInterface>();
             TestNotNull(TEXT("identity non-null"), Handle.GetObject());
             TestTrue(TEXT("identity is the owning actor"), Handle.GetObject() == SourceActor);
             TestTrue(TEXT("the handle points at the source"), Handle.TryGet() == Source);
@@ -342,7 +342,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
 
             Source->SetAbilitySystem(nullptr);
 
-            const auto Handle = Source->GetLifetimeBoundObjectPtr<IRemGameplayTagEventSource>();
+            const auto Handle = Source->GetLifetimeBoundObjectPtr<IRemTagEventSourceInterface>();
             TestTrue(TEXT("valid while the owning actor lives"), Handle.IsValid());
             TestTrue(TEXT("no owned tags without an ability system"), Handle->GetOwnedTags().IsEmpty());
 
@@ -359,8 +359,8 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             // restore the module-registered fallback provider: other test modules (e.g. the
             // camera suite) set and clear this global, and UE automation does not guarantee
             // cross-module order — keep this Describe self-contained
-            Rem::GameplayTag::SetGameplayTagEventSourceProvider(
-                [](AActor* Actor) -> Rem::GameplayTag::FTagEventSourceHandle
+            Rem::GameplayTag::SetTagEventSourceProvider(
+                [](AActor* Actor) -> Rem::GameplayTag::FLifetimeBoundInterfacePtr
                 {
                     auto* AbilitySystem = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor);
                     if (!AbilitySystem)
@@ -371,7 +371,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
                     // reuse an existing component if already attached (avoid duplicates on re-detection)
                     if (auto* Existing = Actor->FindComponentByClass<URemAbilityGameplayTagEventSource>())
                     {
-                        return Existing->GetLifetimeBoundObjectPtr<IRemGameplayTagEventSource>();
+                        return Existing->GetLifetimeBoundObjectPtr<IRemTagEventSourceInterface>();
                     }
 
                     auto* TagEventSource = NewObject<URemAbilityGameplayTagEventSource>(Actor,
@@ -380,13 +380,13 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
                     Actor->AddInstanceComponent(TagEventSource);
                     TagEventSource->RegisterComponent();
 
-                    return TagEventSource->GetLifetimeBoundObjectPtr<IRemGameplayTagEventSource>();
+                    return TagEventSource->GetLifetimeBoundObjectPtr<IRemTagEventSourceInterface>();
                 });
         });
 
         AfterEach([this]
         {
-            Rem::GameplayTag::SetGameplayTagEventSourceProvider({});
+            Rem::GameplayTag::SetTagEventSourceProvider({});
         });
 
         It(TEXT("should create a source component on an actor that has an ability system"), [this]
@@ -396,7 +396,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             auto* AbilitySystem = NewObject<UAbilitySystemComponent>(Actor);
             AbilitySystem->RegisterComponent();
 
-            const auto Source = Rem::GameplayTag::TryCreateGameplayTagEventSource(Actor);
+            const auto Source = Rem::GameplayTag::TryGetLifetimeBoundInterfacePtr(Actor);
             TestTrue(TEXT("provider returns a valid source"), Source.IsValid());
             TestNotNull(TEXT("provider creates the expected component"),
                 Cast<URemAbilityGameplayTagEventSource>(Source.TryGet()));
@@ -421,8 +421,8 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             auto* AbilitySystem = NewObject<UAbilitySystemComponent>(Actor);
             AbilitySystem->RegisterComponent();
 
-            const auto First  = Rem::GameplayTag::TryCreateGameplayTagEventSource(Actor);
-            const auto Second = Rem::GameplayTag::TryCreateGameplayTagEventSource(Actor);
+            const auto First  = Rem::GameplayTag::TryGetLifetimeBoundInterfacePtr(Actor);
+            const auto Second = Rem::GameplayTag::TryGetLifetimeBoundInterfacePtr(Actor);
 
             TestTrue(TEXT("both calls return a source"), First.IsValid() && Second.IsValid());
             TestTrue(TEXT("second call reuses the same component"), First.TryGet() == Second.TryGet());
@@ -435,7 +435,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             FRemAbilityUtilityTestFixture Fixture;
             auto* Actor = Fixture.GetWorld()->SpawnActor<AActor>();
 
-            const auto Source = Rem::GameplayTag::TryCreateGameplayTagEventSource(Actor);
+            const auto Source = Rem::GameplayTag::TryGetLifetimeBoundInterfacePtr(Actor);
             TestTrue(TEXT("no source without an ability system"), !Source.IsValid());
         });
     });

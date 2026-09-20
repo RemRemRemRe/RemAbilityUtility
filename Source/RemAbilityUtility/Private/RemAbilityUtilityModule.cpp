@@ -3,9 +3,9 @@
 #include "RemAbilityUtilityModule.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
-#include "Interface/RemGameplayTagEventSource.h"
-#include "Interface/RemGameplayTagEventSourceHandle.h"
-#include "Interface/RemGameplayTagEventSourceProvider.h"
+#include "Interface/RemTagEventSourceInterface.h"
+#include "GameplayTag/RemTagEventLifetimeBoundInterfacePtr.h"
+#include "GameplayTag/RemTagEventSourceProvider.h"
 #include "Modules/ModuleManager.h"
 #include "RemAbilityGameplayTagEventSource.h"
 
@@ -19,6 +19,8 @@ bool IRemAbilityUtilityModule::IsAvailable()
     return FModuleManager::Get().IsModuleLoaded("RemAbilityUtility");
 }
 
+namespace
+{
 
 class FRemAbilityUtilityModule final : public IRemAbilityUtilityModule
 {
@@ -28,6 +30,8 @@ public:
     virtual void ShutdownModule() override;
 };
 
+}
+
 IMPLEMENT_MODULE(FRemAbilityUtilityModule, RemAbilityUtility)
 
 void FRemAbilityUtilityModule::StartupModule()
@@ -35,8 +39,8 @@ void FRemAbilityUtilityModule::StartupModule()
     IRemAbilityUtilityModule::StartupModule();
 
     // provide the ASC-backed fallback gameplay tag event source (used by RemGameplayCamera)
-    Rem::GameplayTag::SetGameplayTagEventSourceProvider(
-        [](const TNotNull<AActor*> NotNullActor) -> Rem::GameplayTag::FTagEventSourceHandle
+    Rem::GameplayTag::SetTagEventSourceProvider(
+        [](const TNotNull<AActor*> NotNullActor) -> Rem::GameplayTag::FLifetimeBoundInterfacePtr
         {
             AActor* Actor = NotNullActor;
 
@@ -49,7 +53,7 @@ void FRemAbilityUtilityModule::StartupModule()
             // reuse an existing component if already attached (avoid duplicates on re-detection)
             if (auto* Existing = Actor->FindComponentByClass<URemAbilityGameplayTagEventSource>())
             {
-                return Existing->GetLifetimeBoundObjectPtr<IRemGameplayTagEventSource>();
+                return Existing->GetLifetimeBoundObjectPtr<IRemTagEventSourceInterface>();
             }
 
             auto* TagEventSource = NewObject<URemAbilityGameplayTagEventSource>(Actor,
@@ -58,14 +62,14 @@ void FRemAbilityUtilityModule::StartupModule()
             Actor->AddInstanceComponent(TagEventSource);
             TagEventSource->RegisterComponent();
 
-            return TagEventSource->GetLifetimeBoundObjectPtr<IRemGameplayTagEventSource>();
+            return TagEventSource->GetLifetimeBoundObjectPtr<IRemTagEventSourceInterface>();
         });
 }
 
 void FRemAbilityUtilityModule::ShutdownModule()
 {
     // clear the registered provider so the RemCommon factory doesn't point into an unloaded DLL
-    Rem::GameplayTag::SetGameplayTagEventSourceProvider({});
+    Rem::GameplayTag::SetTagEventSourceProvider({});
 
     IRemAbilityUtilityModule::ShutdownModule();
 }

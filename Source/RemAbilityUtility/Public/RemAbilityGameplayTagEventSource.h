@@ -2,17 +2,19 @@
 
 #pragma once
 
-#include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
-#include "Interface/RemGameplayTagEventSource.h"
-#include "Interface/RemGetLifetimeBoundOwner.h"
+#include "Interface/RemTagEventSourceInterface.h"
+#include "Interface/RemGetLifetimeBoundOwnerInterface.h"
+#include "Interface/RemGetLifetimeBoundObjectPtrInterface.h"
+
+#include "GameplayTagContainer.h"
 
 #include "RemAbilityGameplayTagEventSource.generated.h"
 
 class UAbilitySystemComponent;
 
 /**
- * AbilitySystemComponent-backed IRemGameplayTagEventSource
+ * AbilitySystemComponent-backed IRemTagEventSourceInterface
  *
  * mirrors FRemScopedAbilityTagEventManager semantics:
  * NewOrRemoved tag events, unregister-all on destruction
@@ -22,7 +24,7 @@ class UAbilitySystemComponent;
  */
 UCLASS()
 class REMABILITYUTILITY_API URemAbilityGameplayTagEventSource final
-    : public UActorComponent, public IRemGameplayTagEventSource, public IRemGetLifetimeBoundOwner,
+    : public UActorComponent, public IRemTagEventSourceInterface, public IRemGetLifetimeBoundOwnerInterface,
       public Rem::TGetLifetimeBoundObjectPtr<URemAbilityGameplayTagEventSource>
 {
     GENERATED_BODY()
@@ -38,16 +40,15 @@ private:
     TMap<FDelegateHandle, FRegistration> HandleToRegistration{};
 
 public:
-    // identity of the source: the view target actor the component lives on (not the ASC avatar,
-    // which may differ, e.g. an ASC on a PlayerState)
-    REM_DEFINE_LIFETIME_BOUND_PTR_OWNER(GetOwner())
+    // IRemGetLifetimeBoundOwnerInterface
+    [[nodiscard]] virtual UObject* GetLifetimeBoundOwner() const override;
 
     void SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem);
 
     virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-    // IRemGameplayTagEventSource
+    // IRemTagEventSourceInterface
     virtual const FGameplayTagContainer& GetOwnedTags() const override;
     virtual void AddOwnedTags(const FGameplayTagContainer& Tags) override;
     virtual void RemoveOwnedTags(const FGameplayTagContainer& Tags) override;

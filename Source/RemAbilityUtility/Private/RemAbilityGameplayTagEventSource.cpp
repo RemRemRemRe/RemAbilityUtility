@@ -3,8 +3,14 @@
 #include "RemAbilityGameplayTagEventSource.h"
 
 #include "AbilitySystemComponent.h"
+#include "GameFramework/Actor.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(RemAbilityGameplayTagEventSource)
+
+UObject* URemAbilityGameplayTagEventSource::GetLifetimeBoundOwner() const
+{
+    return GetOwner();
+}
 
 void URemAbilityGameplayTagEventSource::SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem)
 {
