@@ -8,6 +8,7 @@
 #include "GameFramework/Actor.h"
 #include "GameplayTagContainer.h"
 #include "Interface/RemGameplayTagEventSource.h"
+#include "Interface/RemGameplayTagEventSourceHandle.h"
 #include "Interface/RemGameplayTagEventSourceProvider.h"
 #include "Misc/AutomationTest.h"
 #include "RemAbilityGameplayTagEventSource.h"
