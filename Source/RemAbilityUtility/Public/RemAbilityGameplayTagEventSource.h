@@ -5,6 +5,7 @@
 #include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 #include "Interface/RemGameplayTagEventSource.h"
+#include "Interface/RemGetLifetimeBoundPtr.h"
 
 #include "RemAbilityGameplayTagEventSource.generated.h"
 
@@ -21,7 +22,8 @@ class UAbilitySystemComponent;
  */
 UCLASS()
 class REMABILITYUTILITY_API URemAbilityGameplayTagEventSource final
-    : public UActorComponent, public IRemGameplayTagEventSource
+    : public UActorComponent, public IRemGameplayTagEventSource, public IRemGetLifetimeBoundPtr,
+      public Rem::TGetLifetimeBoundPtr<URemAbilityGameplayTagEventSource>
 {
     GENERATED_BODY()
 
@@ -36,6 +38,10 @@ private:
     TMap<FDelegateHandle, FRegistration> HandleToRegistration{};
 
 public:
+    // identity of the source: the view target actor the component lives on (not the ASC avatar,
+    // which may differ, e.g. an ASC on a PlayerState)
+    REM_DEFINE_LIFETIME_BOUND_PTR_OWNER(GetOwner())
+
     void SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem);
 
     virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
@@ -48,6 +54,4 @@ public:
     virtual FDelegateHandle RegisterTagEvent(const FGameplayTag& Tag, const FEventDelegate& Delegate) override;
     virtual void UnregisterTagEvent(FDelegateHandle Handle) override;
     virtual void UnregisterAllTagEvents() override;
-    virtual AActor* GetAvatarActor() const override;
-    virtual bool IsValid() const override;
 };

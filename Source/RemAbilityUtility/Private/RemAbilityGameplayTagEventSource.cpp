@@ -108,15 +108,3 @@ void URemAbilityGameplayTagEventSource::UnregisterAllTagEvents()
         It.RemoveCurrent();
     }
 }
-
-AActor* URemAbilityGameplayTagEventSource::GetAvatarActor() const
-{
-    // identity = the view target actor the component lives on (not the ASC avatar,
-    // which may differ, e.g. an ASC on a PlayerState)
-    return GetOwner();
-}
-
-bool URemAbilityGameplayTagEventSource::IsValid() const
-{
-    return AbilitySystem.IsValid() && ::IsValid(GetOwner());
-}

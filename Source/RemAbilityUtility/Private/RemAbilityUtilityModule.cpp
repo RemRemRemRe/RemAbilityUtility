@@ -34,8 +34,10 @@ void FRemAbilityUtilityModule::StartupModule()
 
     // provide the ASC-backed fallback gameplay tag event source (used by RemGameplayCamera)
     Rem::GameplayTag::SetGameplayTagEventSourceProvider(
-        [](AActor* Actor) -> TWeakInterfacePtr<IRemGameplayTagEventSource>
+        [](const TNotNull<AActor*> NotNullActor) -> Rem::GameplayTag::FTagEventSourceHandle
         {
+            AActor* Actor = NotNullActor;
+
             auto* AbilitySystem = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor);
             if (!AbilitySystem)
             {
@@ -45,7 +47,7 @@ void FRemAbilityUtilityModule::StartupModule()
             // reuse an existing component if already attached (avoid duplicates on re-detection)
             if (auto* Existing = Actor->FindComponentByClass<URemAbilityGameplayTagEventSource>())
             {
-                return TWeakInterfacePtr<IRemGameplayTagEventSource>{Existing};
+                return Existing->GetLifetimeBoundPtr<IRemGameplayTagEventSource>();
             }
 
             auto* TagEventSource = NewObject<URemAbilityGameplayTagEventSource>(Actor,
@@ -54,7 +56,7 @@ void FRemAbilityUtilityModule::StartupModule()
             Actor->AddInstanceComponent(TagEventSource);
             TagEventSource->RegisterComponent();
 
-            return TWeakInterfacePtr<IRemGameplayTagEventSource>{TagEventSource};
+            return TagEventSource->GetLifetimeBoundPtr<IRemGameplayTagEventSource>();
         });
 }
 

@@ -317,7 +317,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
 
     Describe(TEXT("Identity and validity"), [this]
     {
-        It(TEXT("should report the owning actor as the avatar"), [this]
+        It(TEXT("should report the owning actor as the lifetime-bound identity"), [this]
         {
             FRemAbilityUtilityTestFixture Fixture;
             auto* SourceActor = Fixture.GetWorld()->SpawnActor<AActor>();
@@ -325,24 +325,28 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             Source->RegisterComponent();
             Source->SetAbilitySystem(&Fixture.GetAbilitySystem());
 
-            TestNotNull(TEXT("avatar non-null"), Source->GetAvatarActor());
-            TestTrue(TEXT("avatar is the owning actor"), Source->GetAvatarActor() == SourceActor);
+            const auto Handle = Source->GetLifetimeBoundPtr<IRemGameplayTagEventSource>();
+            TestNotNull(TEXT("identity non-null"), Handle.GetObject());
+            TestTrue(TEXT("identity is the owning actor"), Handle.GetObject() == SourceActor);
+            TestTrue(TEXT("the handle points at the source"), Handle.Get() == Source);
         });
 
-        It(TEXT("should be invalid without an ability system and valid after it is set"), [this]
+        It(TEXT("should stay a valid handle without an ability system, and yield no owned tags"), [this]
         {
             FRemAbilityUtilityTestFixture Fixture;
             auto* SourceActor = Fixture.GetWorld()->SpawnActor<AActor>();
             auto* Source      = NewObject<URemAbilityGameplayTagEventSource>(SourceActor);
             Source->RegisterComponent();
 
-            TestFalse(TEXT("invalid before ability system set"), Source->IsValid());
-
-            Source->SetAbilitySystem(&Fixture.GetAbilitySystem());
-            TestTrue(TEXT("valid after ability system set"), Source->IsValid());
-
             Source->SetAbilitySystem(nullptr);
-            TestFalse(TEXT("invalid after ability system cleared"), Source->IsValid());
+
+            const auto Handle = Source->GetLifetimeBoundPtr<IRemGameplayTagEventSource>();
+            TestTrue(TEXT("valid while the owning actor lives"), Handle.IsValid());
+            TestTrue(TEXT("no owned tags without an ability system"), Handle->GetOwnedTags().IsEmpty());
+
+            // the ability system is a backing store, not part of the liveness
+            Source->SetAbilitySystem(&Fixture.GetAbilitySystem());
+            TestTrue(TEXT("the ability system can still be attached afterwards"), Handle.IsValid());
         });
     });
 
@@ -354,7 +358,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             // camera suite) set and clear this global, and UE automation does not guarantee
             // cross-module order — keep this Describe self-contained
             Rem::GameplayTag::SetGameplayTagEventSourceProvider(
-                [](AActor* Actor) -> TWeakInterfacePtr<IRemGameplayTagEventSource>
+                [](AActor* Actor) -> Rem::GameplayTag::FTagEventSourceHandle
                 {
                     auto* AbilitySystem = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor);
                     if (!AbilitySystem)
@@ -365,7 +369,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
                     // reuse an existing component if already attached (avoid duplicates on re-detection)
                     if (auto* Existing = Actor->FindComponentByClass<URemAbilityGameplayTagEventSource>())
                     {
-                        return TWeakInterfacePtr<IRemGameplayTagEventSource>{Existing};
+                        return Existing->GetLifetimeBoundPtr<IRemGameplayTagEventSource>();
                     }
 
                     auto* TagEventSource = NewObject<URemAbilityGameplayTagEventSource>(Actor,
@@ -374,7 +378,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
                     Actor->AddInstanceComponent(TagEventSource);
                     TagEventSource->RegisterComponent();
 
-                    return TWeakInterfacePtr<IRemGameplayTagEventSource>{TagEventSource};
+                    return TagEventSource->GetLifetimeBoundPtr<IRemGameplayTagEventSource>();
                 });
         });
 
@@ -393,8 +397,8 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             const auto Source = Rem::GameplayTag::TryCreateGameplayTagEventSource(Actor);
             TestTrue(TEXT("provider returns a valid source"), Source.IsValid());
             TestNotNull(TEXT("provider creates the expected component"),
-                Cast<URemAbilityGameplayTagEventSource>(Source.GetObject()));
-            TestTrue(TEXT("avatar is the requested actor"), Source->GetAvatarActor() == Actor);
+                Cast<URemAbilityGameplayTagEventSource>(Source.Get()));
+            TestTrue(TEXT("identity is the requested actor"), Source.GetObject() == Actor);
 
             const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(
                 TEXT("Test.AbilityUtility.TagEventSource.ProviderCreate"));
@@ -421,7 +425,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             TestTrue(TEXT("both calls return a source"), First.IsValid() && Second.IsValid());
             TestTrue(TEXT("second call reuses the same component"), First.Get() == Second.Get());
             TestTrue(TEXT("single component attached to the actor"),
-                Actor->FindComponentByClass<URemAbilityGameplayTagEventSource>() == First.GetObject());
+                Actor->FindComponentByClass<URemAbilityGameplayTagEventSource>() == First.Get());
         });
 
         It(TEXT("should return an invalid source for an actor without an ability system"), [this]
