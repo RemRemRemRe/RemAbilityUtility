@@ -330,7 +330,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             const auto Handle = Source->GetLifetimeBoundObjectPtr<IRemGameplayTagEventSource>();
             TestNotNull(TEXT("identity non-null"), Handle.GetObject());
             TestTrue(TEXT("identity is the owning actor"), Handle.GetObject() == SourceActor);
-            TestTrue(TEXT("the handle points at the source"), Handle.Get() == Source);
+            TestTrue(TEXT("the handle points at the source"), Handle.TryGet() == Source);
         });
 
         It(TEXT("should stay a valid handle without an ability system, and yield no owned tags"), [this]
@@ -399,7 +399,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             const auto Source = Rem::GameplayTag::TryCreateGameplayTagEventSource(Actor);
             TestTrue(TEXT("provider returns a valid source"), Source.IsValid());
             TestNotNull(TEXT("provider creates the expected component"),
-                Cast<URemAbilityGameplayTagEventSource>(Source.Get()));
+                Cast<URemAbilityGameplayTagEventSource>(Source.TryGet()));
             TestTrue(TEXT("identity is the requested actor"), Source.GetObject() == Actor);
 
             const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(
@@ -425,9 +425,9 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             const auto Second = Rem::GameplayTag::TryCreateGameplayTagEventSource(Actor);
 
             TestTrue(TEXT("both calls return a source"), First.IsValid() && Second.IsValid());
-            TestTrue(TEXT("second call reuses the same component"), First.Get() == Second.Get());
+            TestTrue(TEXT("second call reuses the same component"), First.TryGet() == Second.TryGet());
             TestTrue(TEXT("single component attached to the actor"),
-                Actor->FindComponentByClass<URemAbilityGameplayTagEventSource>() == First.Get());
+                Actor->FindComponentByClass<URemAbilityGameplayTagEventSource>() == First.TryGet());
         });
 
         It(TEXT("should return an invalid source for an actor without an ability system"), [this]
