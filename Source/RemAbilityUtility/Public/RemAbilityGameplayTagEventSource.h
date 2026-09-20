@@ -2,7 +2,10 @@
 
 #pragma once
 
-#include "Interface/IRemGameplayTagEventSource.h"
+#include "Components/ActorComponent.h"
+#include "Interface/RemGameplayTagEventSource.h"
+
+#include "RemAbilityGameplayTagEventSource.generated.h"
 
 class UAbilitySystemComponent;
 
@@ -11,13 +14,20 @@ class UAbilitySystemComponent;
  *
  * mirrors FRemScopedAbilityTagEventManager semantics:
  * NewOrRemoved tag events, unique registration, unregister-all on destruction
+ *
+ * lives as a component on the view target actor, so the camera's
+ * TWeakInterfacePtr auto-invalidates when the actor dies
  */
-class REMABILITYUTILITY_API FRemAbilityGameplayTagEventSource : public IRemGameplayTagEventSource
+UCLASS()
+class REMABILITYUTILITY_API URemAbilityGameplayTagEventSource final
+    : public UActorComponent, public IRemGameplayTagEventSource
 {
-public:
-    explicit FRemAbilityGameplayTagEventSource(UAbilitySystemComponent* InAbilitySystem);
-    ~FRemAbilityGameplayTagEventSource() override;
+    GENERATED_BODY()
 
+public:
+    void SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem);
+
+    // IRemGameplayTagEventSource
     const FGameplayTagContainer& GetOwnedTags() const override;
     void AddOwnedTags(const FGameplayTagContainer& Tags) override;
     void RemoveOwnedTags(const FGameplayTagContainer& Tags) override;

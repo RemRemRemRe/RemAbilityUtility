@@ -3,7 +3,7 @@
 #include "RemAbilityUtilityModule.h"
 #include "Modules/ModuleManager.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "Interface/IRemGameplayTagEventSource.h"
+#include "Interface/RemGameplayTagEventSource.h"
 #include "RemAbilityGameplayTagEventSource.h"
 
 IRemAbilityUtilityModule& IRemAbilityUtilityModule::Get()
@@ -33,14 +33,20 @@ void FRemAbilityUtilityModule::StartupModule()
 
     // provide the ASC-backed fallback gameplay tag event source (used by RemGameplayCamera)
     Rem::Tag::SetGameplayTagEventSourceProvider(
-        [](AActor* Actor) -> TUniquePtr<IRemGameplayTagEventSource>
+        [](AActor* Actor) -> TWeakInterfacePtr<IRemGameplayTagEventSource>
         {
-            if (auto* AbilitySystem = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor))
+            auto* AbilitySystem = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor);
+            if (!AbilitySystem)
             {
-                return MakeUnique<FRemAbilityGameplayTagEventSource>(AbilitySystem);
+                return {};
             }
 
-            return nullptr;
+            auto* TagEventSource = NewObject<URemAbilityGameplayTagEventSource>(Actor);
+            TagEventSource->SetAbilitySystem(AbilitySystem);
+            Actor->AddInstanceComponent(TagEventSource);
+            TagEventSource->RegisterComponent();
+
+            return TWeakInterfacePtr<IRemGameplayTagEventSource>{TagEventSource};
         });
 }
 

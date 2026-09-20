@@ -4,24 +4,21 @@
 
 #include "AbilitySystemComponent.h"
 
-FRemAbilityGameplayTagEventSource::FRemAbilityGameplayTagEventSource(UAbilitySystemComponent* InAbilitySystem)
-    : AbilitySystem(InAbilitySystem)
-{
-}
-
-FRemAbilityGameplayTagEventSource::~FRemAbilityGameplayTagEventSource()
+void URemAbilityGameplayTagEventSource::SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem)
 {
     UnregisterAllTagEvents();
+
+    AbilitySystem = InAbilitySystem;
 }
 
-const FGameplayTagContainer& FRemAbilityGameplayTagEventSource::GetOwnedTags() const
+const FGameplayTagContainer& URemAbilityGameplayTagEventSource::GetOwnedTags() const
 {
     static const FGameplayTagContainer EmptyTags{};
 
     return AbilitySystem ? AbilitySystem->GetOwnedGameplayTags() : EmptyTags;
 }
 
-void FRemAbilityGameplayTagEventSource::AddOwnedTags(const FGameplayTagContainer& Tags)
+void URemAbilityGameplayTagEventSource::AddOwnedTags(const FGameplayTagContainer& Tags)
 {
     if (AbilitySystem)
     {
@@ -29,7 +26,7 @@ void FRemAbilityGameplayTagEventSource::AddOwnedTags(const FGameplayTagContainer
     }
 }
 
-void FRemAbilityGameplayTagEventSource::RemoveOwnedTags(const FGameplayTagContainer& Tags)
+void URemAbilityGameplayTagEventSource::RemoveOwnedTags(const FGameplayTagContainer& Tags)
 {
     if (AbilitySystem)
     {
@@ -37,7 +34,7 @@ void FRemAbilityGameplayTagEventSource::RemoveOwnedTags(const FGameplayTagContai
     }
 }
 
-FDelegateHandle FRemAbilityGameplayTagEventSource::RegisterTagEvent(const FGameplayTag& Tag,
+FDelegateHandle URemAbilityGameplayTagEventSource::RegisterTagEvent(const FGameplayTag& Tag,
     const FEventDelegate& Delegate)
 {
     // won't override an existing registration (mirrors FRemScopedAbilityTagEventManager::RegisterEventUnique)
@@ -53,7 +50,7 @@ FDelegateHandle FRemAbilityGameplayTagEventSource::RegisterTagEvent(const FGamep
     return DelegateHandle;
 }
 
-void FRemAbilityGameplayTagEventSource::UnregisterTagEvent(const FGameplayTag& Tag)
+void URemAbilityGameplayTagEventSource::UnregisterTagEvent(const FGameplayTag& Tag)
 {
     if (auto* Handle = EventHandleMap.Find(Tag))
     {
@@ -69,7 +66,7 @@ void FRemAbilityGameplayTagEventSource::UnregisterTagEvent(const FGameplayTag& T
     }
 }
 
-void FRemAbilityGameplayTagEventSource::UnregisterAllTagEvents()
+void URemAbilityGameplayTagEventSource::UnregisterAllTagEvents()
 {
     if (!AbilitySystem)
     {
@@ -91,12 +88,12 @@ void FRemAbilityGameplayTagEventSource::UnregisterAllTagEvents()
     }
 }
 
-AActor* FRemAbilityGameplayTagEventSource::GetAvatarActor() const
+AActor* URemAbilityGameplayTagEventSource::GetAvatarActor() const
 {
-    return AbilitySystem ? AbilitySystem->GetAvatarActor() : nullptr;
+    return AbilitySystem ? AbilitySystem->GetAvatarActor() : GetOwner();
 }
 
-bool FRemAbilityGameplayTagEventSource::IsValid() const
+bool URemAbilityGameplayTagEventSource::IsValid() const
 {
-    return ::IsValid(AbilitySystem);
+    return ::IsValid(AbilitySystem) && ::IsValid(GetOwner());
 }
