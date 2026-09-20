@@ -27,7 +27,7 @@ Rem::GameplayTag::FTagEventSourceFeature::FContribution MakeTagEventSourceContri
 {
     return {
         AActor::StaticClass(),
-        [](const Rem::GameplayTag::FTagEventSourceFeature::FRequest NotNullActor)
+        [](const Rem::GameplayTag::FTagEventSourceFeature::FRequest& NotNullActor)
         -> Rem::GameplayTag::FLifetimeBoundInterfacePtr
         {
             AActor* Actor = NotNullActor;

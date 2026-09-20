@@ -20,7 +20,7 @@ class UAbilitySystemComponent;
  * NewOrRemoved tag events, unregister-all on destruction
  *
  * lives as a component on the view target actor, so the camera's
- * TWeakInterfacePtr auto-invalidates when the actor dies
+ * Rem::GameplayTag::FLifetimeBoundInterfacePtr auto-invalidates when the actor dies
  */
 UCLASS()
 class REMABILITYUTILITY_API URemAbilityGameplayTagEventSource final
