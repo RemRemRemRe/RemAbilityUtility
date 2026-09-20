@@ -24,6 +24,16 @@ class REMABILITYUTILITY_API URemAbilityGameplayTagEventSource final
 {
     GENERATED_BODY()
 
+private:
+    struct FRegistration
+    {
+        FGameplayTag Tag;
+        FDelegateHandle AscHandle;
+    };
+
+    TWeakObjectPtr<UAbilitySystemComponent> AbilitySystem{};
+    TMap<FDelegateHandle, FRegistration> HandleToRegistration{};
+
 public:
     void SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem);
 
@@ -41,8 +51,4 @@ public:
     void UnregisterAllTagEvents() override;
     AActor* GetAvatarActor() const override;
     bool IsValid() const override;
-
-private:
-    TObjectPtr<UAbilitySystemComponent> AbilitySystem;
-    TMap<FDelegateHandle, FGameplayTag> HandleToTagMap;
 };
