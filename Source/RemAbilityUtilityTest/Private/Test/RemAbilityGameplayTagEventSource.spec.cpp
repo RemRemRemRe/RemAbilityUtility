@@ -327,7 +327,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             Source->RegisterComponent();
             Source->SetAbilitySystem(&Fixture.GetAbilitySystem());
 
-            const auto Handle = Source->GetLifetimeBoundPtr<IRemGameplayTagEventSource>();
+            const auto Handle = Source->GetLifetimeBoundObjectPtr<IRemGameplayTagEventSource>();
             TestNotNull(TEXT("identity non-null"), Handle.GetObject());
             TestTrue(TEXT("identity is the owning actor"), Handle.GetObject() == SourceActor);
             TestTrue(TEXT("the handle points at the source"), Handle.Get() == Source);
@@ -342,7 +342,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
 
             Source->SetAbilitySystem(nullptr);
 
-            const auto Handle = Source->GetLifetimeBoundPtr<IRemGameplayTagEventSource>();
+            const auto Handle = Source->GetLifetimeBoundObjectPtr<IRemGameplayTagEventSource>();
             TestTrue(TEXT("valid while the owning actor lives"), Handle.IsValid());
             TestTrue(TEXT("no owned tags without an ability system"), Handle->GetOwnedTags().IsEmpty());
 
@@ -371,7 +371,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
                     // reuse an existing component if already attached (avoid duplicates on re-detection)
                     if (auto* Existing = Actor->FindComponentByClass<URemAbilityGameplayTagEventSource>())
                     {
-                        return Existing->GetLifetimeBoundPtr<IRemGameplayTagEventSource>();
+                        return Existing->GetLifetimeBoundObjectPtr<IRemGameplayTagEventSource>();
                     }
 
                     auto* TagEventSource = NewObject<URemAbilityGameplayTagEventSource>(Actor,
@@ -380,7 +380,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
                     Actor->AddInstanceComponent(TagEventSource);
                     TagEventSource->RegisterComponent();
 
-                    return TagEventSource->GetLifetimeBoundPtr<IRemGameplayTagEventSource>();
+                    return TagEventSource->GetLifetimeBoundObjectPtr<IRemGameplayTagEventSource>();
                 });
         });
 

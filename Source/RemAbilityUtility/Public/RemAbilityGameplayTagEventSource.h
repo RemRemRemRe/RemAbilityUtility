@@ -5,7 +5,7 @@
 #include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 #include "Interface/RemGameplayTagEventSource.h"
-#include "Interface/RemGetLifetimeBoundObjectPtr.h"
+#include "Interface/RemGetLifetimeBoundOwner.h"
 
 #include "RemAbilityGameplayTagEventSource.generated.h"
 
@@ -22,7 +22,7 @@ class UAbilitySystemComponent;
  */
 UCLASS()
 class REMABILITYUTILITY_API URemAbilityGameplayTagEventSource final
-    : public UActorComponent, public IRemGameplayTagEventSource, public IRemGetLifetimeBoundObjectPtr,
+    : public UActorComponent, public IRemGameplayTagEventSource, public IRemGetLifetimeBoundOwner,
       public Rem::TGetLifetimeBoundObjectPtr<URemAbilityGameplayTagEventSource>
 {
     GENERATED_BODY()

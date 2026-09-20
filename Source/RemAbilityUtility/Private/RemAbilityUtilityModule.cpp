@@ -49,7 +49,7 @@ void FRemAbilityUtilityModule::StartupModule()
             // reuse an existing component if already attached (avoid duplicates on re-detection)
             if (auto* Existing = Actor->FindComponentByClass<URemAbilityGameplayTagEventSource>())
             {
-                return Existing->GetLifetimeBoundPtr<IRemGameplayTagEventSource>();
+                return Existing->GetLifetimeBoundObjectPtr<IRemGameplayTagEventSource>();
             }
 
             auto* TagEventSource = NewObject<URemAbilityGameplayTagEventSource>(Actor,
@@ -58,7 +58,7 @@ void FRemAbilityUtilityModule::StartupModule()
             Actor->AddInstanceComponent(TagEventSource);
             TagEventSource->RegisterComponent();
 
-            return TagEventSource->GetLifetimeBoundPtr<IRemGameplayTagEventSource>();
+            return TagEventSource->GetLifetimeBoundObjectPtr<IRemGameplayTagEventSource>();
         });
 }
 
