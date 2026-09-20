@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 #include "Interface/RemGameplayTagEventSource.h"
 
@@ -37,18 +38,16 @@ private:
 public:
     void SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem);
 
-protected:
     virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-public:
     // IRemGameplayTagEventSource
-    const FGameplayTagContainer& GetOwnedTags() const override;
-    void AddOwnedTags(const FGameplayTagContainer& Tags) override;
-    void RemoveOwnedTags(const FGameplayTagContainer& Tags) override;
-    FDelegateHandle RegisterTagEvent(const FGameplayTag& Tag, const FEventDelegate& Delegate) override;
-    void UnregisterTagEvent(FDelegateHandle Handle) override;
-    void UnregisterAllTagEvents() override;
-    AActor* GetAvatarActor() const override;
-    bool IsValid() const override;
+    virtual const FGameplayTagContainer& GetOwnedTags() const override;
+    virtual void AddOwnedTags(const FGameplayTagContainer& Tags) override;
+    virtual void RemoveOwnedTags(const FGameplayTagContainer& Tags) override;
+    virtual FDelegateHandle RegisterTagEvent(const FGameplayTag& Tag, const FEventDelegate& Delegate) override;
+    virtual void UnregisterTagEvent(FDelegateHandle Handle) override;
+    virtual void UnregisterAllTagEvents() override;
+    virtual AActor* GetAvatarActor() const override;
+    virtual bool IsValid() const override;
 };

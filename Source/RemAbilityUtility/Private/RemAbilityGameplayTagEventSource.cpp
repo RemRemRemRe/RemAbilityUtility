@@ -31,7 +31,9 @@ const FGameplayTagContainer& URemAbilityGameplayTagEventSource::GetOwnedTags() c
 {
     static const FGameplayTagContainer EmptyTags{};
 
-    return AbilitySystem.IsValid() ? AbilitySystem->GetOwnedGameplayTags() : EmptyTags;
+    return AbilitySystem.IsValid()
+               ? AbilitySystem->GetOwnedGameplayTags()
+               : EmptyTags;
 }
 
 void URemAbilityGameplayTagEventSource::AddOwnedTags(const FGameplayTagContainer& Tags)

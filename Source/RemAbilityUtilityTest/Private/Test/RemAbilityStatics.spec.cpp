@@ -78,8 +78,10 @@ void FRemAbilityStaticsTest::Define()
             FGameplayTagContainer OnlyB;
             OnlyB.AddTag(TagB);
 
-            TestFalse(TEXT("owned tag breaks none"), HasMatchingGameplayTags<ELogicOperator::None>(AbilitySystem, WithA));
-            TestTrue(TEXT("unowned tag keeps none"), HasMatchingGameplayTags<ELogicOperator::None>(AbilitySystem, OnlyB));
+            TestFalse(TEXT("owned tag breaks none"),
+                HasMatchingGameplayTags<ELogicOperator::None>(AbilitySystem, WithA));
+            TestTrue(TEXT("unowned tag keeps none"),
+                HasMatchingGameplayTags<ELogicOperator::None>(AbilitySystem, OnlyB));
         });
     });
 
@@ -138,8 +140,10 @@ void FRemAbilityStaticsTest::Define()
 
             // the query overload always evaluates the query itself, ignoring All/Any/None
             TestFalse(TEXT("all mode uses query"), HasMatchingGameplayTags<ELogicOperator::All>(AbilitySystem, Query));
-            TestFalse(TEXT("any mode also uses query"), HasMatchingGameplayTags<ELogicOperator::Any>(AbilitySystem, Query));
-            TestFalse(TEXT("none mode also uses query"), HasMatchingGameplayTags<ELogicOperator::None>(AbilitySystem, Query));
+            TestFalse(TEXT("any mode also uses query"),
+                HasMatchingGameplayTags<ELogicOperator::Any>(AbilitySystem, Query));
+            TestFalse(TEXT("none mode also uses query"),
+                HasMatchingGameplayTags<ELogicOperator::None>(AbilitySystem, Query));
 
             FGameplayTagContainer SingleTag;
             SingleTag.AddTag(TagA);
@@ -153,8 +157,10 @@ void FRemAbilityStaticsTest::Define()
         It(TEXT("HasAnyMatchingTags and HasAllMatchingTags should check tag counts"), [this]
         {
             FRemAbilityUtilityTestFixture Fixture;
-            const auto TagA = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Statics.NonTemplateA"));
-            const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Statics.NonTemplateB"));
+            const auto TagA = FRemAbilityUtilityTestFixture::AddNativeTag(
+                TEXT("Test.AbilityUtility.Statics.NonTemplateA"));
+            const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(
+                TEXT("Test.AbilityUtility.Statics.NonTemplateB"));
             Fixture.GetAbilitySystem().AddLooseGameplayTag(TagA);
 
             TestTrue(TEXT("any with A"), HasAnyMatchingTags(Fixture.GetAbilitySystem(), {TagA}));
@@ -174,8 +180,10 @@ void FRemAbilityStaticsTest::Define()
         It(TEXT("query variants should match the query tags by count"), [this]
         {
             FRemAbilityUtilityTestFixture Fixture;
-            const auto TagA = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Statics.QueryStaticsA"));
-            const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Statics.QueryStaticsB"));
+            const auto TagA = FRemAbilityUtilityTestFixture::AddNativeTag(
+                TEXT("Test.AbilityUtility.Statics.QueryStaticsA"));
+            const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(
+                TEXT("Test.AbilityUtility.Statics.QueryStaticsB"));
             Fixture.GetAbilitySystem().AddLooseGameplayTag(TagA);
 
             FGameplayTagContainer QueryTags;

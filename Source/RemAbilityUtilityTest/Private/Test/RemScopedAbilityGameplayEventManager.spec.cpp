@@ -69,7 +69,7 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
             FRemAbilityUtilityTestFixture Fixture;
             const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Gameplay.Override"));
             FRemScopedAbilityGameplayEventManager Manager{&Fixture.GetAbilitySystem()};
-            auto FirstCallCount = 0;
+            auto FirstCallCount  = 0;
             auto SecondCallCount = 0;
             Manager.RegisterEvent(Tag,
                 FRemScopedAbilityGameplayEventManager::FEventDelegate::CreateLambda(
@@ -99,7 +99,7 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
             FRemAbilityUtilityTestFixture Fixture;
             const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Gameplay.Unique"));
             FRemScopedAbilityGameplayEventManager Manager{&Fixture.GetAbilitySystem()};
-            auto FirstCallCount = 0;
+            auto FirstCallCount  = 0;
             auto SecondCallCount = 0;
             Manager.RegisterEventUnique(Tag,
                 FRemScopedAbilityGameplayEventManager::FEventDelegate::CreateLambda(
@@ -127,7 +127,8 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
         It(TEXT("should stop firing after unregistering"), [this]
         {
             FRemAbilityUtilityTestFixture Fixture;
-            const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Gameplay.Unregister"));
+            const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(
+                TEXT("Test.AbilityUtility.Gameplay.Unregister"));
             FRemScopedAbilityGameplayEventManager Manager{&Fixture.GetAbilitySystem()};
             auto CallCount = 0;
             Manager.RegisterEvent(Tag,
@@ -164,7 +165,7 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
             const auto TagA = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Gameplay.BulkA"));
             const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Gameplay.BulkB"));
             FRemScopedAbilityGameplayEventManager Manager{&Fixture.GetAbilitySystem()};
-            auto CallCount = 0;
+            auto CallCount      = 0;
             const auto Delegate = FRemScopedAbilityGameplayEventManager::FEventDelegate::CreateLambda(
                 [&CallCount](const FGameplayEventData*)
                 {
@@ -188,7 +189,7 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
         It(TEXT("should unregister old bindings and return true on change"), [this]
         {
             FRemAbilityUtilityTestFixture Fixture;
-            auto* OtherActor = Fixture.GetWorld()->SpawnActor<AActor>();
+            auto* OtherActor         = Fixture.GetWorld()->SpawnActor<AActor>();
             auto* OtherAbilitySystem = NewObject<UAbilitySystemComponent>(OtherActor);
             OtherAbilitySystem->RegisterComponent();
 
