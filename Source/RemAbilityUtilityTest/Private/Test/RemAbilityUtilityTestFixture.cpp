@@ -23,9 +23,14 @@ UWorld* FRemAbilityUtilityTestFixture::GetWorld() const noexcept
     return World;
 }
 
-UAbilitySystemComponent& FRemAbilityUtilityTestFixture::GetAbilitySystem() const noexcept
+TNotNull<AActor*> FRemAbilityUtilityTestFixture::GetActor() const noexcept
 {
-    return *AbilitySystem;
+    return &*Actor;
+}
+
+TNotNull<UAbilitySystemComponent*> FRemAbilityUtilityTestFixture::GetAbilitySystem() const noexcept
+{
+    return &*AbilitySystem;
 }
 
 FGameplayTag FRemAbilityUtilityTestFixture::AddNativeTag(const FStringView TagName)

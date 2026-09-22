@@ -25,7 +25,7 @@ URemAbilityGameplayTagEventSource* MakeTagEventSource(const FRemAbilityUtilityTe
     auto* SourceActor = Fixture.GetWorld()->SpawnActor<AActor>();
     auto* Source      = NewObject<URemAbilityGameplayTagEventSource>(SourceActor);
     Source->RegisterComponent();
-    Source->SetAbilitySystem(&Fixture.GetAbilitySystem());
+    Source->SetAbilitySystem(Fixture.GetAbilitySystem());
     return Source;
 }
 }
@@ -54,12 +54,12 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
                     LastCount = Count;
                 }));
 
-            Fixture.GetAbilitySystem().AddLooseGameplayTag(Tag);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(Tag);
             TestEqual(TEXT("fired on add"), CallCount, 1);
             TestEqual(TEXT("fired tag"), LastTag, Tag);
             TestEqual(TEXT("count after add"), LastCount, 1);
 
-            Fixture.GetAbilitySystem().RemoveLooseGameplayTag(Tag);
+            Fixture.GetAbilitySystem()->RemoveLooseGameplayTag(Tag);
             TestEqual(TEXT("fired on remove"), CallCount, 2);
             TestEqual(TEXT("count after remove"), LastCount, 0);
         });
@@ -79,8 +79,8 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
                     ++CallCount;
                 }));
 
-            Fixture.GetAbilitySystem().AddLooseGameplayTag(TagB);
-            Fixture.GetAbilitySystem().RemoveLooseGameplayTag(TagB);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagB);
+            Fixture.GetAbilitySystem()->RemoveLooseGameplayTag(TagB);
 
             TestEqual(TEXT("not fired for other tag"), CallCount, 0);
         });
@@ -104,7 +104,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
                     ++SecondCallCount;
                 }));
 
-            Fixture.GetAbilitySystem().AddLooseGameplayTag(Tag);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(Tag);
 
             TestEqual(TEXT("first listener fired"), FirstCallCount, 1);
             TestEqual(TEXT("second listener fired"), SecondCallCount, 1);
@@ -152,8 +152,8 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
 
             Source->UnregisterTagEvent(FirstHandle);
 
-            Fixture.GetAbilitySystem().AddLooseGameplayTag(Tag);
-            Fixture.GetAbilitySystem().RemoveLooseGameplayTag(Tag);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(Tag);
+            Fixture.GetAbilitySystem()->RemoveLooseGameplayTag(Tag);
 
             TestEqual(TEXT("unregistered listener does not fire"), FirstCallCount, 0);
             TestEqual(TEXT("other listener still fires"), SecondCallCount, 2);
@@ -186,8 +186,8 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             Source->UnregisterAllTagEvents();
             Source->UnregisterAllTagEvents();
 
-            Fixture.GetAbilitySystem().AddLooseGameplayTag(TagA);
-            Fixture.GetAbilitySystem().AddLooseGameplayTag(TagB);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagA);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagB);
             TestEqual(TEXT("no callbacks after unregister-all"), CallCount, 0);
         });
 
@@ -206,8 +206,8 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
 
             Source->DestroyComponent();
 
-            Fixture.GetAbilitySystem().AddLooseGameplayTag(Tag);
-            Fixture.GetAbilitySystem().RemoveLooseGameplayTag(Tag);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(Tag);
+            Fixture.GetAbilitySystem()->RemoveLooseGameplayTag(Tag);
             TestEqual(TEXT("no callback after component destroyed"), CallCount, 0);
         });
 
@@ -226,7 +226,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
 
             Source->GetOwner()->Destroy();
 
-            Fixture.GetAbilitySystem().AddLooseGameplayTag(Tag);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(Tag);
             TestEqual(TEXT("no callback after owner actor destroyed"), CallCount, 0);
         });
     });
@@ -254,7 +254,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
 
             Source->SetAbilitySystem(OtherAbilitySystem);
 
-            Fixture.GetAbilitySystem().AddLooseGameplayTag(Tag);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(Tag);
             TestEqual(TEXT("old ability system no longer fires"), CallCount, 0);
 
             // bindings are not carried over: register again on the new ability system.
@@ -325,7 +325,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             auto* SourceActor = Fixture.GetWorld()->SpawnActor<AActor>();
             auto* Source      = NewObject<URemAbilityGameplayTagEventSource>(SourceActor);
             Source->RegisterComponent();
-            Source->SetAbilitySystem(&Fixture.GetAbilitySystem());
+            Source->SetAbilitySystem(Fixture.GetAbilitySystem());
 
             const auto Handle = Source->GetLifetimeBoundObjectPtr<IRemTagEventSourceInterface>();
             TestNotNull(TEXT("identity non-null"), Handle.GetObject());
@@ -347,7 +347,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             TestTrue(TEXT("no owned tags without an ability system"), Handle->GetOwnedTags().IsEmpty());
 
             // the ability system is a backing store, not part of the liveness
-            Source->SetAbilitySystem(&Fixture.GetAbilitySystem());
+            Source->SetAbilitySystem(Fixture.GetAbilitySystem());
             TestTrue(TEXT("the ability system can still be attached afterwards"), Handle.IsValid());
         });
     });

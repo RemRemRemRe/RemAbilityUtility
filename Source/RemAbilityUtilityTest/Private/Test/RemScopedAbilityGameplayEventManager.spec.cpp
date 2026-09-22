@@ -25,7 +25,7 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
         {
             FRemAbilityUtilityTestFixture Fixture;
             const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Gameplay.Fire"));
-            FRemScopedAbilityGameplayEventManager Manager{&Fixture.GetAbilitySystem()};
+            FRemScopedAbilityGameplayEventManager Manager{Fixture.GetAbilitySystem()};
             auto CallCount = 0;
             const FGameplayEventData* LastPayload{};
             Manager.RegisterEvent(Tag,
@@ -38,7 +38,7 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
 
             FGameplayEventData Payload;
             Payload.EventTag = Tag;
-            Fixture.GetAbilitySystem().HandleGameplayEvent(Tag, &Payload);
+            Fixture.GetAbilitySystem()->HandleGameplayEvent(Tag, &Payload);
 
             TestEqual(TEXT("fired"), CallCount, 1);
             TestTrue(TEXT("payload passed through"), LastPayload == &Payload);
@@ -49,7 +49,7 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
             FRemAbilityUtilityTestFixture Fixture;
             const auto TagA = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Gameplay.A"));
             const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Gameplay.B"));
-            FRemScopedAbilityGameplayEventManager Manager{&Fixture.GetAbilitySystem()};
+            FRemScopedAbilityGameplayEventManager Manager{Fixture.GetAbilitySystem()};
             auto CallCount = 0;
             Manager.RegisterEvent(TagA,
                 FRemScopedAbilityGameplayEventManager::FEventDelegate::CreateLambda(
@@ -59,7 +59,7 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
                     }));
 
             FGameplayEventData Payload;
-            Fixture.GetAbilitySystem().HandleGameplayEvent(TagB, &Payload);
+            Fixture.GetAbilitySystem()->HandleGameplayEvent(TagB, &Payload);
 
             TestEqual(TEXT("not fired for other tag"), CallCount, 0);
         });
@@ -68,7 +68,7 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
         {
             FRemAbilityUtilityTestFixture Fixture;
             const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Gameplay.Override"));
-            FRemScopedAbilityGameplayEventManager Manager{&Fixture.GetAbilitySystem()};
+            FRemScopedAbilityGameplayEventManager Manager{Fixture.GetAbilitySystem()};
             auto FirstCallCount  = 0;
             auto SecondCallCount = 0;
             Manager.RegisterEvent(Tag,
@@ -85,7 +85,7 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
                     }));
 
             FGameplayEventData Payload;
-            Fixture.GetAbilitySystem().HandleGameplayEvent(Tag, &Payload);
+            Fixture.GetAbilitySystem()->HandleGameplayEvent(Tag, &Payload);
 
             TestEqual(TEXT("first delegate not called"), FirstCallCount, 0);
             TestEqual(TEXT("second delegate called"), SecondCallCount, 1);
@@ -98,7 +98,7 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
         {
             FRemAbilityUtilityTestFixture Fixture;
             const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Gameplay.Unique"));
-            FRemScopedAbilityGameplayEventManager Manager{&Fixture.GetAbilitySystem()};
+            FRemScopedAbilityGameplayEventManager Manager{Fixture.GetAbilitySystem()};
             auto FirstCallCount  = 0;
             auto SecondCallCount = 0;
             Manager.RegisterEventUnique(Tag,
@@ -115,7 +115,7 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
                     }));
 
             FGameplayEventData Payload;
-            Fixture.GetAbilitySystem().HandleGameplayEvent(Tag, &Payload);
+            Fixture.GetAbilitySystem()->HandleGameplayEvent(Tag, &Payload);
 
             TestEqual(TEXT("first delegate called"), FirstCallCount, 1);
             TestEqual(TEXT("second delegate ignored"), SecondCallCount, 0);
@@ -129,7 +129,7 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
             FRemAbilityUtilityTestFixture Fixture;
             const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(
                 TEXT("Test.AbilityUtility.Gameplay.Unregister"));
-            FRemScopedAbilityGameplayEventManager Manager{&Fixture.GetAbilitySystem()};
+            FRemScopedAbilityGameplayEventManager Manager{Fixture.GetAbilitySystem()};
             auto CallCount = 0;
             Manager.RegisterEvent(Tag,
                 FRemScopedAbilityGameplayEventManager::FEventDelegate::CreateLambda(
@@ -142,7 +142,7 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
             TestTrue(TEXT("no longer has event"), !Manager.HasEvent(Tag));
 
             FGameplayEventData Payload;
-            Fixture.GetAbilitySystem().HandleGameplayEvent(Tag, &Payload);
+            Fixture.GetAbilitySystem()->HandleGameplayEvent(Tag, &Payload);
 
             TestEqual(TEXT("no callback after unregister"), CallCount, 0);
         });
@@ -151,7 +151,7 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
         {
             FRemAbilityUtilityTestFixture Fixture;
             const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Gameplay.NotBound"));
-            FRemScopedAbilityGameplayEventManager Manager{&Fixture.GetAbilitySystem()};
+            FRemScopedAbilityGameplayEventManager Manager{Fixture.GetAbilitySystem()};
 
             TestFalse(TEXT("not bound"), Manager.UnRegisterEvent(Tag));
         });
@@ -164,7 +164,7 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
             FRemAbilityUtilityTestFixture Fixture;
             const auto TagA = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Gameplay.BulkA"));
             const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Gameplay.BulkB"));
-            FRemScopedAbilityGameplayEventManager Manager{&Fixture.GetAbilitySystem()};
+            FRemScopedAbilityGameplayEventManager Manager{Fixture.GetAbilitySystem()};
             auto CallCount      = 0;
             const auto Delegate = FRemScopedAbilityGameplayEventManager::FEventDelegate::CreateLambda(
                 [&CallCount](const FGameplayEventData*)
@@ -178,8 +178,8 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
 
             TestEqual(TEXT("handles cleared"), Manager.GetEventHandleMap().Num(), 0);
             FGameplayEventData Payload;
-            Fixture.GetAbilitySystem().HandleGameplayEvent(TagA, &Payload);
-            Fixture.GetAbilitySystem().HandleGameplayEvent(TagB, &Payload);
+            Fixture.GetAbilitySystem()->HandleGameplayEvent(TagA, &Payload);
+            Fixture.GetAbilitySystem()->HandleGameplayEvent(TagB, &Payload);
             TestEqual(TEXT("no callbacks"), CallCount, 0);
         });
     });
@@ -194,7 +194,7 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
             OtherAbilitySystem->RegisterComponent();
 
             const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Gameplay.Swap"));
-            FRemScopedAbilityGameplayEventManager Manager{&Fixture.GetAbilitySystem()};
+            FRemScopedAbilityGameplayEventManager Manager{Fixture.GetAbilitySystem()};
             auto CallCount = 0;
             Manager.RegisterEvent(Tag,
                 FRemScopedAbilityGameplayEventManager::FEventDelegate::CreateLambda(
@@ -207,7 +207,7 @@ void FRemScopedAbilityGameplayEventManagerTest::Define()
             TestFalse(TEXT("unchanged second time"), Manager.SetAbilitySystem(OtherAbilitySystem));
 
             FGameplayEventData Payload;
-            Fixture.GetAbilitySystem().HandleGameplayEvent(Tag, &Payload);
+            Fixture.GetAbilitySystem()->HandleGameplayEvent(Tag, &Payload);
             TestEqual(TEXT("old ability system no longer fires"), CallCount, 0);
 
             // bindings are not carried over: register again on the new ability system

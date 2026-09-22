@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "RemNotNull.h"
 #include "RemTestWorld.h"
 
 struct FGameplayTag;
@@ -23,9 +24,20 @@ public:
 
     UE_NONCOPYABLE(FRemAbilityUtilityTestFixture);
 
-    UWorld* GetWorld() const noexcept;
+    /**
+     * @return the test world; never null
+     */
+    [[nodiscard]] UWorld* GetWorld() const noexcept;
 
-    UAbilitySystemComponent& GetAbilitySystem() const noexcept;
+    /**
+     * @return the actor owning the ability system; never null
+     */
+    [[nodiscard]] TNotNull<AActor*> GetActor() const noexcept;
+
+    /**
+     * @return the component owned by the test actor; never null
+     */
+    [[nodiscard]] TNotNull<UAbilitySystemComponent*> GetAbilitySystem() const noexcept;
 
     /** Registers a native gameplay tag; returns the existing tag if already registered. */
     [[nodiscard]] static FGameplayTag AddNativeTag(const FStringView TagName);

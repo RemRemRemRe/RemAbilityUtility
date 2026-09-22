@@ -8,19 +8,19 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(RemAbilityUtilityStatics)
 
-bool Rem::Ability::HasAnyMatchingQueryTag(const UAbilitySystemComponent& AbilitySystem,
+bool Rem::Ability::HasAnyMatchingQueryTag(const TNotNull<const UAbilitySystemComponent*> AbilitySystem,
     const FGameplayTagQuery& TagQuery)
 {
     return HasAnyMatchingTags(AbilitySystem, TagQuery.GetGameplayTagArray());
 }
 
-bool Rem::Ability::HasAllMatchingQueryTag(const UAbilitySystemComponent& AbilitySystem,
+bool Rem::Ability::HasAllMatchingQueryTag(const TNotNull<const UAbilitySystemComponent*> AbilitySystem,
     const FGameplayTagQuery& TagQuery)
 {
     return HasAllMatchingTags(AbilitySystem, TagQuery.GetGameplayTagArray());
 }
 
-bool Rem::Ability::HasAnyMatchingTags(const UAbilitySystemComponent& AbilitySystem,
+bool Rem::Ability::HasAnyMatchingTags(const TNotNull<const UAbilitySystemComponent*> AbilitySystem,
     const TConstArrayView<FGameplayTag> Tags)
 {
     if (Tags.IsEmpty())
@@ -30,7 +30,7 @@ bool Rem::Ability::HasAnyMatchingTags(const UAbilitySystemComponent& AbilitySyst
 
     for (auto& Tag : Tags)
     {
-        if (AbilitySystem.GetTagCount(Tag) > 0)
+        if (AbilitySystem->GetTagCount(Tag) > 0)
         {
             return true;
         }
@@ -39,7 +39,7 @@ bool Rem::Ability::HasAnyMatchingTags(const UAbilitySystemComponent& AbilitySyst
     return false;
 }
 
-bool Rem::Ability::HasAllMatchingTags(const UAbilitySystemComponent& AbilitySystem,
+bool Rem::Ability::HasAllMatchingTags(const TNotNull<const UAbilitySystemComponent*> AbilitySystem,
     const TConstArrayView<FGameplayTag> Tags)
 {
     if (Tags.IsEmpty())
@@ -49,7 +49,7 @@ bool Rem::Ability::HasAllMatchingTags(const UAbilitySystemComponent& AbilitySyst
 
     for (auto& Tag : Tags)
     {
-        if (AbilitySystem.GetTagCount(Tag) == 0)
+        if (AbilitySystem->GetTagCount(Tag) == 0)
         {
             return false;
         }

@@ -35,8 +35,8 @@ void FRemAbilityStaticsTest::Define()
             FRemAbilityUtilityTestFixture Fixture;
             const auto TagA = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Statics.A"));
             const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Statics.B"));
-            const Rem::TNotNull<UAbilitySystemComponent*> AbilitySystem{&Fixture.GetAbilitySystem()};
-            Fixture.GetAbilitySystem().AddLooseGameplayTag(TagA);
+            const Rem::TNotNull<UAbilitySystemComponent*> AbilitySystem{Fixture.GetAbilitySystem()};
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagA);
 
             FGameplayTagContainer Matching;
             Matching.AddTag(TagA);
@@ -53,8 +53,8 @@ void FRemAbilityStaticsTest::Define()
             FRemAbilityUtilityTestFixture Fixture;
             const auto TagA = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Statics.C"));
             const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Statics.D"));
-            const Rem::TNotNull<UAbilitySystemComponent*> AbilitySystem{&Fixture.GetAbilitySystem()};
-            Fixture.GetAbilitySystem().AddLooseGameplayTag(TagA);
+            const Rem::TNotNull<UAbilitySystemComponent*> AbilitySystem{Fixture.GetAbilitySystem()};
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagA);
 
             FGameplayTagContainer WithA;
             WithA.AddTag(TagA);
@@ -70,8 +70,8 @@ void FRemAbilityStaticsTest::Define()
             FRemAbilityUtilityTestFixture Fixture;
             const auto TagA = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Statics.E"));
             const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Statics.F"));
-            const Rem::TNotNull<UAbilitySystemComponent*> AbilitySystem{&Fixture.GetAbilitySystem()};
-            Fixture.GetAbilitySystem().AddLooseGameplayTag(TagA);
+            const Rem::TNotNull<UAbilitySystemComponent*> AbilitySystem{Fixture.GetAbilitySystem()};
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagA);
 
             FGameplayTagContainer WithA;
             WithA.AddTag(TagA);
@@ -92,8 +92,8 @@ void FRemAbilityStaticsTest::Define()
             FRemAbilityUtilityTestFixture Fixture;
             const auto TagA = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Statics.SingleA"));
             const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Statics.SingleB"));
-            const Rem::TNotNull<UAbilitySystemComponent*> AbilitySystem{&Fixture.GetAbilitySystem()};
-            Fixture.GetAbilitySystem().AddLooseGameplayTag(TagA);
+            const Rem::TNotNull<UAbilitySystemComponent*> AbilitySystem{Fixture.GetAbilitySystem()};
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagA);
 
             TestTrue(TEXT("all match"), HasMatchingGameplayTags<ELogicOperator::All>(AbilitySystem, TagA));
             TestFalse(TEXT("all not match"), HasMatchingGameplayTags<ELogicOperator::All>(AbilitySystem, TagB));
@@ -110,8 +110,8 @@ void FRemAbilityStaticsTest::Define()
             FRemAbilityUtilityTestFixture Fixture;
             const auto TagA = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Statics.ArrayA"));
             const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Statics.ArrayB"));
-            const Rem::TNotNull<UAbilitySystemComponent*> AbilitySystem{&Fixture.GetAbilitySystem()};
-            Fixture.GetAbilitySystem().AddLooseGameplayTag(TagA);
+            const Rem::TNotNull<UAbilitySystemComponent*> AbilitySystem{Fixture.GetAbilitySystem()};
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagA);
 
             FRemGameplayTagArray WithA;
             WithA.Tags.Add(TagA);
@@ -130,8 +130,8 @@ void FRemAbilityStaticsTest::Define()
             FRemAbilityUtilityTestFixture Fixture;
             const auto TagA = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Statics.QueryA"));
             const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(TEXT("Test.AbilityUtility.Statics.QueryB"));
-            const Rem::TNotNull<UAbilitySystemComponent*> AbilitySystem{&Fixture.GetAbilitySystem()};
-            Fixture.GetAbilitySystem().AddLooseGameplayTag(TagA);
+            const Rem::TNotNull<UAbilitySystemComponent*> AbilitySystem{Fixture.GetAbilitySystem()};
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagA);
 
             FGameplayTagContainer QueryTags;
             QueryTags.AddTag(TagA);
@@ -161,7 +161,7 @@ void FRemAbilityStaticsTest::Define()
                 TEXT("Test.AbilityUtility.Statics.NonTemplateA"));
             const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(
                 TEXT("Test.AbilityUtility.Statics.NonTemplateB"));
-            Fixture.GetAbilitySystem().AddLooseGameplayTag(TagA);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagA);
 
             TestTrue(TEXT("any with A"), HasAnyMatchingTags(Fixture.GetAbilitySystem(), {TagA}));
             TestFalse(TEXT("any with B"), HasAnyMatchingTags(Fixture.GetAbilitySystem(), {TagB}));
@@ -184,7 +184,7 @@ void FRemAbilityStaticsTest::Define()
                 TEXT("Test.AbilityUtility.Statics.QueryStaticsA"));
             const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(
                 TEXT("Test.AbilityUtility.Statics.QueryStaticsB"));
-            Fixture.GetAbilitySystem().AddLooseGameplayTag(TagA);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagA);
 
             FGameplayTagContainer QueryTags;
             QueryTags.AddTag(TagA);
@@ -194,6 +194,16 @@ void FRemAbilityStaticsTest::Define()
             // these walk the query's tag array instead of evaluating the query
             TestTrue(TEXT("any in query"), HasAnyMatchingQueryTag(Fixture.GetAbilitySystem(), Query));
             TestFalse(TEXT("all in query"), HasAllMatchingQueryTag(Fixture.GetAbilitySystem(), Query));
+        });
+    });
+    Describe(TEXT("Test fixture accessors"), [this]
+    {
+        It(TEXT("GetAbilitySystem should return the component owned by GetActor"), [this]
+        {
+            const FRemAbilityUtilityTestFixture Fixture;
+
+            TestTrue(TEXT("same component"),
+                Fixture.GetAbilitySystem() == Fixture.GetActor()->FindComponentByClass<UAbilitySystemComponent>());
         });
     });
 }

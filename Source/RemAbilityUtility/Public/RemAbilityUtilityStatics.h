@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "RemNotNull.h"
 #include "RemAbilityUtilityStatics.generated.h"
 
 struct FGameplayTag;
@@ -18,13 +19,13 @@ class REMABILITYUTILITY_API URemAbilityUtilityStatics : public UBlueprintFunctio
 
 namespace Rem::Ability
 {
-REMABILITYUTILITY_API bool HasAnyMatchingQueryTag(const UAbilitySystemComponent& AbilitySystem,
+[[nodiscard]] REMABILITYUTILITY_API bool HasAnyMatchingQueryTag(TNotNull<const UAbilitySystemComponent*> AbilitySystem,
     const FGameplayTagQuery& TagQuery);
-REMABILITYUTILITY_API bool HasAllMatchingQueryTag(const UAbilitySystemComponent& AbilitySystem,
+[[nodiscard]] REMABILITYUTILITY_API bool HasAllMatchingQueryTag(TNotNull<const UAbilitySystemComponent*> AbilitySystem,
     const FGameplayTagQuery& TagQuery);
 
-REMABILITYUTILITY_API bool HasAnyMatchingTags(const UAbilitySystemComponent& AbilitySystem,
+[[nodiscard]] REMABILITYUTILITY_API bool HasAnyMatchingTags(TNotNull<const UAbilitySystemComponent*> AbilitySystem,
     TConstArrayView<FGameplayTag> Tags);
-REMABILITYUTILITY_API bool HasAllMatchingTags(const UAbilitySystemComponent& AbilitySystem,
+[[nodiscard]] REMABILITYUTILITY_API bool HasAllMatchingTags(TNotNull<const UAbilitySystemComponent*> AbilitySystem,
     TConstArrayView<FGameplayTag> Tags);
 }
