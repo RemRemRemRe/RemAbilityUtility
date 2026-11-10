@@ -4,7 +4,9 @@
 
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "Abilities/GameplayAbilityTypes.h"
 #include "Engine/World.h"
+#include "Event/RemGameplayEventContract.h"
 #include "GameFramework/Actor.h"
 #include "GameplayTagContainer.h"
 #include "Interface/RemTagEventSourceInterface.h"
@@ -18,7 +20,8 @@
 namespace
 {
 using Rem::AbilityUtility::Private::FRemAbilityUtilityTestFixture;
-using FTagEventDelegate = IRemTagEventSourceInterface::FEventDelegate;
+using FTagEventDelegate     = IRemTagEventSourceInterface::FEventDelegate;
+using FPayloadEventDelegate = IRemTagEventSourceInterface::FPayloadEventDelegate;
 
 URemAbilityGameplayTagEventSource* MakeTagEventSource(const FRemAbilityUtilityTestFixture& Fixture)
 {
@@ -295,6 +298,71 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
 
             Fixture.GetAbilitySystem()->AddLooseGameplayTag(Tag);
             TestEqual(TEXT("no callback after owner actor destroyed"), CallCount, 0);
+        });
+    });
+
+    Describe(TEXT("Payload events"), [this]
+    {
+        It(TEXT("should deliver both views and leave the tag count channel silent"), [this]
+        {
+            FRemAbilityUtilityTestFixture Fixture;
+            auto* Source   = MakeTagEventSource(Fixture);
+            const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(
+                TEXT("Test.AbilityUtility.TagEventSource.Payload"));
+
+            auto PayloadCallCount      = 0;
+            auto CountChannelCallCount = 0;
+            FGameplayTag PayloadTag{};
+            FRemEventLifecycle ReceivedLifecycle{};
+            FRemEventSpatial ReceivedSpatial{};
+            (void)Source->RegisterTagEvent(Tag, FTagEventDelegate::CreateLambda(
+                [&CountChannelCallCount](const FGameplayTag, const int32)
+                {
+                    ++CountChannelCallCount;
+                }));
+            (void)Source->RegisterPayloadEvent(Tag, FPayloadEventDelegate::CreateLambda(
+                [&](const FGameplayTag FiredTag, const FRemTagEventPayload& Payload)
+                {
+                    ++PayloadCallCount;
+                    PayloadTag = FiredTag;
+
+                    if (const auto* Lifecycle = Payload.Find<FRemEventLifecycle>())
+                    {
+                        ReceivedLifecycle = *Lifecycle;
+                    }
+
+                    if (const auto* Spatial = Payload.Find<FRemEventSpatial>())
+                    {
+                        ReceivedSpatial = *Spatial;
+                    }
+                }));
+
+            FRemEventLifecycle Lifecycle;
+            Lifecycle.EventId = 7;
+            Lifecycle.Phase   = ERemEventPhase::Pause;
+            FRemEventSpatial Spatial;
+            Spatial.Location = FVector{100.0, 200.0, 300.0};
+            Spatial.Normal   = FVector::UpVector;
+
+            // the source reads the ability system's own gameplay event channel, so an engine-level dispatch
+            // reaches it without the gameplay relay the test module must not depend on
+            FGameplayEventData EventData;
+            EventData.EventTag = Tag;
+            EventData.AddStructView(Lifecycle);
+            EventData.AddStructView(Spatial);
+
+            Fixture.GetAbilitySystem()->HandleGameplayEvent(Tag, &EventData);
+
+            TestEqual(TEXT("fired once"), PayloadCallCount, 1);
+            TestEqual(TEXT("fired with the event tag"), PayloadTag, Tag);
+            TestEqual(TEXT("lifecycle id"), ReceivedLifecycle.EventId, uint32{7});
+            TestTrue(TEXT("lifecycle phase"), ReceivedLifecycle.Phase == ERemEventPhase::Pause);
+            TestTrue(TEXT("spatial location"), ReceivedSpatial.Location == Spatial.Location);
+            TestTrue(TEXT("spatial normal"), ReceivedSpatial.Normal == Spatial.Normal);
+            TestEqual(TEXT("the tag count channel stays silent"), CountChannelCallCount, 0);
+
+            Fixture.GetAbilitySystem()->HandleGameplayEvent(Tag, &EventData);
+            TestEqual(TEXT("a repeated dispatch reaches the same listener"), PayloadCallCount, 2);
         });
     });
 

@@ -8,11 +8,14 @@
 #include "Interface/RemGetLifetimeBoundOwnerInterface.h"
 #include "Interface/RemGetLifetimeBoundObjectPtrInterface.h"
 
+#include "Containers/Map.h"
+#include "Delegates/DelegateSignatureImpl.inl"
 #include "RemMultiListenerAbilityTagEventManager.h"
 #include "GameplayTagContainer.h"
 
 #include "RemAbilityGameplayTagEventSource.generated.h"
 
+struct FGameplayEventData;
 class UAbilitySystemComponent;
 
 /**
@@ -25,6 +28,9 @@ class UAbilitySystemComponent;
  *
  * lives as a component on the view target actor, so the camera's
  * Rem::GameplayTag::FLifetimeBoundInterfacePtr auto-invalidates when the actor dies
+ *
+ * the payload channel subscribes on the ability system's GenericGameplayEventCallbacks, which are keyed by
+ * exact tag, and keeps its listeners across an ability system swap (@see IRemTagEventSourceInterface)
  */
 UCLASS()
 class REMABILITYUTILITY_API URemAbilityGameplayTagEventSource final
@@ -36,16 +42,23 @@ class REMABILITYUTILITY_API URemAbilityGameplayTagEventSource final
     UPROPERTY(VisibleAnywhere, Transient, Category = "Rem")
     FRemMultiListenerAbilityTagEventManager TagEventManager{};
 
+    /** payload listeners per tag; these survive an ability system swap */
+    TMap<FGameplayTag, TMulticastDelegate<void(FGameplayTag, const FRemTagEventPayload&)>> PayloadEvents{};
+
+    /** the delegate each tag is subscribed with on the current ability system */
+    TMap<FGameplayTag, FDelegateHandle> PayloadBindings{};
+
 public:
     // IRemGetLifetimeBoundOwnerInterface
     [[nodiscard]] virtual UObject* GetLifetimeBoundOwner() const override;
 
     /**
-     * clear every binding and point the manager at the given ability system
+     * point the manager at the given ability system
      *
-     * the clear is unconditional - passing the same ability system again still drops the bindings;
+     * tag bindings are cleared unconditionally - passing the same ability system again still drops them;
      * that is this component's existing contract and differs from FRemMultiListenerAbilityTagEventManager,
-     * which clears only when the ability system changes
+     * which clears only when the ability system changes. payload listeners are kept and rebound to the
+     * given ability system (@see IRemTagEventSourceInterface)
      */
     void SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem);
 
@@ -63,4 +76,21 @@ public:
     RegisterTagEvent(const FGameplayTag& Tag, const FEventDelegate& Delegate) override;
     virtual void UnregisterTagEvent(const FGameplayTag& Tag, FDelegateHandle Handle) override;
     virtual void UnregisterAllTagEvents() override;
+    [[nodiscard]] virtual FDelegateHandle
+    RegisterPayloadEvent(const FGameplayTag& Tag, const FPayloadEventDelegate& Delegate) override;
+    virtual void UnregisterPayloadEvent(const FGameplayTag& Tag, FDelegateHandle Handle) override;
+    virtual void UnregisterAllPayloadEvents() override;
+
+private:
+    /** ability system callback; the tag arrives after the payload because a multicast delegate appends the bound variables */
+    void OnAbilitySystemGameplayEvent(const FGameplayEventData* Payload, FGameplayTag Tag);
+
+    /** subscribe one tag's channel on the given ability system and remember the handle */
+    void BindPayloadEvent(const FGameplayTag& Tag, TNotNull<UAbilitySystemComponent*> AbilitySystem);
+
+    /** unsubscribe one tag's bound handle from the current ability system */
+    void UnbindPayloadEvent(const FGameplayTag& Tag, FDelegateHandle Handle) const;
+
+    /** unsubscribe every bound handle and forget them; the listeners stay registered */
+    void UnbindPayloadEvents();
 };
