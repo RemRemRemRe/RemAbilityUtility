@@ -19,7 +19,7 @@ void URemAbilityGameplayTagEventSource::SetAbilitySystem(UAbilitySystemComponent
     AbilitySystem = InAbilitySystem;
 }
 
-void URemAbilityGameplayTagEventSource::OnComponentDestroyed(bool bDestroyingHierarchy)
+void URemAbilityGameplayTagEventSource::OnComponentDestroyed(const bool bDestroyingHierarchy)
 {
     UnregisterAllTagEvents();
 

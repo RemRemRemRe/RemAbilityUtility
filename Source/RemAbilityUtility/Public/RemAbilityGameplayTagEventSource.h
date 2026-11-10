@@ -2,7 +2,8 @@
 
 #pragma once
 
-#include "Components/ActorComponent.h"
+#include "Components/RemActorComponent.h"
+
 #include "Interface/RemTagEventSourceInterface.h"
 #include "Interface/RemGetLifetimeBoundOwnerInterface.h"
 #include "Interface/RemGetLifetimeBoundObjectPtrInterface.h"
@@ -24,7 +25,7 @@ class UAbilitySystemComponent;
  */
 UCLASS()
 class REMABILITYUTILITY_API URemAbilityGameplayTagEventSource final
-    : public UActorComponent, public IRemTagEventSourceInterface, public IRemGetLifetimeBoundOwnerInterface,
+    : public URemActorComponent, public IRemTagEventSourceInterface, public IRemGetLifetimeBoundOwnerInterface,
       public Rem::TGetLifetimeBoundObjectPtr<URemAbilityGameplayTagEventSource, AActor>
 {
     GENERATED_BODY()
@@ -44,7 +45,7 @@ public:
 
     void SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem);
 
-    virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
+    virtual void OnComponentDestroyed(const bool bDestroyingHierarchy) override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
     // IRemTagEventSourceInterface
