@@ -16,17 +16,11 @@ UObject* URemAbilityGameplayTagEventSource::GetLifetimeBoundOwner() const
 void URemAbilityGameplayTagEventSource::SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem)
 {
     TagEventManager.UnRegisterEvents();
-    UnbindPayloadEvents();
 
     (void)TagEventManager.SetAbilitySystem(InAbilitySystem);
 
-    if (InAbilitySystem)
-    {
-        for (const auto& Pair : PayloadEvents)
-        {
-            BindPayloadEvent(Pair.Key, InAbilitySystem);
-        }
-    }
+    // the payload listeners move with the ability system instead of being dropped (@see IRemTagEventSourceInterface)
+    (void)PayloadEventManager.SetAbilitySystem(InAbilitySystem);
 }
 
 void URemAbilityGameplayTagEventSource::OnComponentDestroyed(const bool bDestroyingHierarchy)
@@ -90,108 +84,16 @@ void URemAbilityGameplayTagEventSource::UnregisterAllTagEvents()
 FDelegateHandle URemAbilityGameplayTagEventSource::RegisterPayloadEvent(const FGameplayTag& Tag,
     const FPayloadEventDelegate& Delegate)
 {
-    const auto Handle = PayloadEvents.FindOrAdd(Tag).Add(Delegate);
-
-    if (!PayloadBindings.Contains(Tag))
-    {
-        if (auto* AbilitySystem = TagEventManager.TryGetAbilitySystem())
-        {
-            BindPayloadEvent(Tag, AbilitySystem);
-        }
-    }
-
-    return Handle;
+    return PayloadEventManager.RegisterEvent(Tag, Delegate);
 }
 
 void URemAbilityGameplayTagEventSource::UnregisterPayloadEvent(const FGameplayTag& Tag,
     const FDelegateHandle Handle)
 {
-    auto* Listeners = PayloadEvents.Find(Tag);
-    if (!Listeners)
-    {
-        return;
-    }
-
-    Listeners->Remove(Handle);
-
-    if (Listeners->IsBound())
-    {
-        return;
-    }
-
-    PayloadEvents.Remove(Tag);
-
-    if (FDelegateHandle BoundHandle;
-        PayloadBindings.RemoveAndCopyValue(Tag, BoundHandle))
-    {
-        UnbindPayloadEvent(Tag, BoundHandle);
-    }
+    (void)PayloadEventManager.UnregisterEvent(Tag, Handle);
 }
 
 void URemAbilityGameplayTagEventSource::UnregisterAllPayloadEvents()
 {
-    PayloadEvents.Reset();
-
-    UnbindPayloadEvents();
-}
-
-void URemAbilityGameplayTagEventSource::OnAbilitySystemGameplayEvent(const FGameplayEventData* Payload,
-    const FGameplayTag Tag)
-{
-    const auto* Listeners = PayloadEvents.Find(Tag);
-    if (!Listeners || !Payload)
-    {
-        return;
-    }
-
-    TArray<FStructView, TInlineAllocator<4>> Views;
-    Views.Reserve(Payload->Structs.Num() + Payload->StructViews.Num());
-
-    // the payload is const, yet a view never owns the memory it points at, so locating a typed datum in it is a read
-    for (const auto& Struct : Payload->Structs)
-    {
-        Views.Emplace(const_cast<FInstancedStruct&>(Struct));
-    }
-
-    Views.Append(Payload->StructViews);
-
-    const FRemTagEventPayload EventPayload{.Views = Views};
-
-    // a listener may unregister itself while it runs
-    const auto ListenersCopy = *Listeners;
-    ListenersCopy.Broadcast(Tag, EventPayload);
-}
-
-void URemAbilityGameplayTagEventSource::BindPayloadEvent(const FGameplayTag& Tag,
-    const TNotNull<UAbilitySystemComponent*> AbilitySystem)
-{
-    const auto Handle = AbilitySystem->GenericGameplayEventCallbacks.FindOrAdd(Tag)
-                                     .AddUObject(this, &ThisClass::OnAbilitySystemGameplayEvent, Tag);
-
-    PayloadBindings.Add(Tag, Handle);
-}
-
-void URemAbilityGameplayTagEventSource::UnbindPayloadEvent(const FGameplayTag& Tag,
-    const FDelegateHandle Handle) const
-{
-    auto* AbilitySystem = TagEventManager.TryGetAbilitySystem();
-    if (!AbilitySystem)
-    {
-        return;
-    }
-
-    if (auto* Delegates = AbilitySystem->GenericGameplayEventCallbacks.Find(Tag))
-    {
-        Delegates->Remove(Handle);
-    }
-}
-
-void URemAbilityGameplayTagEventSource::UnbindPayloadEvents()
-{
-    for (const auto& Pair : PayloadBindings)
-    {
-        UnbindPayloadEvent(Pair.Key, Pair.Value);
-    }
-
-    PayloadBindings.Reset();
+    PayloadEventManager.UnRegisterEvents();
 }

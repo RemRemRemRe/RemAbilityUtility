@@ -14,6 +14,7 @@
 #include "GameplayTag/RemTagEventSourceFeature.h"
 #include "Misc/AutomationTest.h"
 #include "RemAbilityGameplayTagEventSource.h"
+#include "Struct/RemInstancedStructStatics.inl"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -321,25 +322,29 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
                     ++CountChannelCallCount;
                 }));
             (void)Source->RegisterPayloadEvent(Tag, FPayloadEventDelegate::CreateLambda(
-                [&](const FGameplayTag FiredTag, const FRemTagEventPayload& Payload)
+                [&](const FGameplayTag FiredTag, const Rem::GameplayTag::FEventPayload& Payload)
                 {
                     ++PayloadCallCount;
                     PayloadTag = FiredTag;
 
-                    if (const auto* Lifecycle = Payload.Find<FRemEventLifecycle>())
+                    if (const auto Lifecycle =
+                            Rem::Struct::FindConstStructView<FRemEventLifecycle>(Payload.Views).Get<0>();
+                        Lifecycle.IsValid())
                     {
-                        ReceivedLifecycle = *Lifecycle;
+                        ReceivedLifecycle = Lifecycle.Get();
                     }
 
-                    if (const auto* Spatial = Payload.Find<FRemEventSpatial>())
+                    if (const auto Spatial =
+                            Rem::Struct::FindConstStructView<FRemEventSpatial>(Payload.Views).Get<0>();
+                        Spatial.IsValid())
                     {
-                        ReceivedSpatial = *Spatial;
+                        ReceivedSpatial = Spatial.Get();
                     }
                 }));
 
             FRemEventLifecycle Lifecycle;
             Lifecycle.EventId = 7;
-            Lifecycle.Phase   = ERemEventPhase::Pause;
+            Lifecycle.Phase   = ERemLifecyclePhase::Pause;
             FRemEventSpatial Spatial;
             Spatial.Location = FVector{100.0, 200.0, 300.0};
             Spatial.Normal   = FVector::UpVector;
@@ -356,7 +361,7 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             TestEqual(TEXT("fired once"), PayloadCallCount, 1);
             TestEqual(TEXT("fired with the event tag"), PayloadTag, Tag);
             TestEqual(TEXT("lifecycle id"), ReceivedLifecycle.EventId, uint32{7});
-            TestTrue(TEXT("lifecycle phase"), ReceivedLifecycle.Phase == ERemEventPhase::Pause);
+            TestTrue(TEXT("lifecycle phase"), ReceivedLifecycle.Phase == ERemLifecyclePhase::Pause);
             TestTrue(TEXT("spatial location"), ReceivedSpatial.Location == Spatial.Location);
             TestTrue(TEXT("spatial normal"), ReceivedSpatial.Normal == Spatial.Normal);
             TestEqual(TEXT("the tag count channel stays silent"), CountChannelCallCount, 0);
@@ -364,6 +369,45 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             Fixture.GetAbilitySystem()->HandleGameplayEvent(Tag, &EventData);
             TestEqual(TEXT("a repeated dispatch reaches the same listener"), PayloadCallCount, 2);
         });
+
+        It(TEXT("should deliver one event to both listeners of a tag and stop delivering to the unregistered one"),
+            [this]
+            {
+                const FRemAbilityUtilityTestFixture Fixture;
+                auto* Source   = MakeTagEventSource(Fixture);
+                const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(
+                    TEXT("Test.AbilityUtility.TagEventSource.PayloadMultiListener"));
+
+                auto FirstPayloadCallCount  = 0;
+                auto SecondPayloadCallCount = 0;
+                const auto FirstHandle      = Source->RegisterPayloadEvent(Tag, FPayloadEventDelegate::CreateLambda(
+                    [&FirstPayloadCallCount](const FGameplayTag, const Rem::GameplayTag::FEventPayload&)
+                    {
+                        ++FirstPayloadCallCount;
+                    }));
+                (void)Source->RegisterPayloadEvent(Tag, FPayloadEventDelegate::CreateLambda(
+                    [&SecondPayloadCallCount](const FGameplayTag, const Rem::GameplayTag::FEventPayload&)
+                    {
+                        ++SecondPayloadCallCount;
+                    }));
+
+                FRemEventLifecycle Lifecycle;
+                Lifecycle.EventId = 11;
+
+                FGameplayEventData EventData;
+                EventData.EventTag = Tag;
+                EventData.AddStructView(Lifecycle);
+
+                Fixture.GetAbilitySystem()->HandleGameplayEvent(Tag, &EventData);
+                TestEqual(TEXT("the first listener fires once"), FirstPayloadCallCount, 1);
+                TestEqual(TEXT("the second listener fires once"), SecondPayloadCallCount, 1);
+
+                Source->UnregisterPayloadEvent(Tag, FirstHandle);
+
+                Fixture.GetAbilitySystem()->HandleGameplayEvent(Tag, &EventData);
+                TestEqual(TEXT("the unregistered listener stays silent"), FirstPayloadCallCount, 1);
+                TestEqual(TEXT("the remaining listener fires again"), SecondPayloadCallCount, 2);
+            });
     });
 
     Describe(TEXT("SetAbilitySystem"), [this]
