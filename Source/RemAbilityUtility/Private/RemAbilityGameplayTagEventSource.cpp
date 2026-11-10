@@ -4,6 +4,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "GameFramework/Actor.h"
+#include "GameplayTagContainer.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(RemAbilityGameplayTagEventSource)
 
@@ -14,9 +15,9 @@ UObject* URemAbilityGameplayTagEventSource::GetLifetimeBoundOwner() const
 
 void URemAbilityGameplayTagEventSource::SetAbilitySystem(UAbilitySystemComponent* InAbilitySystem)
 {
-    UnregisterAllTagEvents();
+    TagEventManager.UnRegisterEvents();
 
-    AbilitySystem = InAbilitySystem;
+    (void)TagEventManager.SetAbilitySystem(InAbilitySystem);
 }
 
 void URemAbilityGameplayTagEventSource::OnComponentDestroyed(const bool bDestroyingHierarchy)
@@ -35,16 +36,17 @@ void URemAbilityGameplayTagEventSource::EndPlay(const EEndPlayReason::Type EndPl
 
 const FGameplayTagContainer& URemAbilityGameplayTagEventSource::GetOwnedTags() const
 {
-    static const FGameplayTagContainer EmptyTags{};
+    if (const auto* AbilitySystem = TagEventManager.TryGetAbilitySystem())
+    {
+        return AbilitySystem->GetOwnedGameplayTags();
+    }
 
-    return AbilitySystem.IsValid()
-               ? AbilitySystem->GetOwnedGameplayTags()
-               : EmptyTags;
+    return FGameplayTagContainer::EmptyContainer;
 }
 
 void URemAbilityGameplayTagEventSource::AddOwnedTags(const FGameplayTagContainer& Tags)
 {
-    if (AbilitySystem.IsValid())
+    if (auto* AbilitySystem = TagEventManager.TryGetAbilitySystem())
     {
         AbilitySystem->AddLooseGameplayTags(Tags);
     }
@@ -52,7 +54,7 @@ void URemAbilityGameplayTagEventSource::AddOwnedTags(const FGameplayTagContainer
 
 void URemAbilityGameplayTagEventSource::RemoveOwnedTags(const FGameplayTagContainer& Tags)
 {
-    if (AbilitySystem.IsValid())
+    if (auto* AbilitySystem = TagEventManager.TryGetAbilitySystem())
     {
         AbilitySystem->RemoveLooseGameplayTags(Tags);
     }
@@ -61,56 +63,15 @@ void URemAbilityGameplayTagEventSource::RemoveOwnedTags(const FGameplayTagContai
 FDelegateHandle URemAbilityGameplayTagEventSource::RegisterTagEvent(const FGameplayTag& Tag,
     const FEventDelegate& Delegate)
 {
-    if (!AbilitySystem.IsValid())
-    {
-        // a source without an ability system cannot register tag events; return an invalid handle
-        return {};
-    }
-
-    // multiple listeners per tag are allowed (asset-group and setting-value scopes may share a tag)
-    const auto AscHandle = AbilitySystem->RegisterGameplayTagEvent(Tag,
-        EGameplayTagEventType::NewOrRemoved).Add(Delegate);
-
-    // the ASC multicast returns the delegate instance's own handle, which collides when the same
-    // delegate object is registered multiple times; keep a per-registration handle instead
-    const auto OwnHandle = FDelegateHandle{FDelegateHandle::GenerateNewHandle};
-    HandleToRegistration.Add(OwnHandle, {Tag, AscHandle});
-
-    return OwnHandle;
+    return TagEventManager.RegisterEvent(Tag, Delegate);
 }
 
-void URemAbilityGameplayTagEventSource::UnregisterTagEvent(FDelegateHandle Handle)
+void URemAbilityGameplayTagEventSource::UnregisterTagEvent(const FGameplayTag& Tag, const FDelegateHandle Handle)
 {
-    if (!AbilitySystem.IsValid())
-    {
-        return;
-    }
-
-    if (const auto* Registration = HandleToRegistration.Find(Handle))
-    {
-        // registrations are always NewOrRemoved, so a matching unregister succeeds
-        AbilitySystem->UnregisterGameplayTagEvent(Registration->AscHandle, Registration->Tag,
-            EGameplayTagEventType::NewOrRemoved);
-
-        HandleToRegistration.Remove(Handle);
-    }
+    (void)TagEventManager.UnregisterEvent(Tag, Handle);
 }
 
 void URemAbilityGameplayTagEventSource::UnregisterAllTagEvents()
 {
-    if (!AbilitySystem.IsValid())
-    {
-        HandleToRegistration.Reset();
-        return;
-    }
-
-    for (auto It = HandleToRegistration.CreateIterator(); It; ++It)
-    {
-        const auto& Registration = It.Value();
-        // registrations are always NewOrRemoved, so a matching unregister succeeds
-        AbilitySystem->UnregisterGameplayTagEvent(Registration.AscHandle, Registration.Tag,
-            EGameplayTagEventType::NewOrRemoved);
-
-        It.RemoveCurrent();
-    }
+    TagEventManager.UnRegisterEvents();
 }

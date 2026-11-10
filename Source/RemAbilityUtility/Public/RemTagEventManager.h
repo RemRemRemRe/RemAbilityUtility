@@ -37,6 +37,12 @@ public:
 /**
  * event manager for UAbilitySystemComponent::RegisterGameplayTagEvent
  *
+ * one binding per tag: registering a tag again overrides the previous delegate
+ *
+ * for several listeners per tag and per-(tag, handle) unregistration, see
+ * FRemMultiListenerAbilityTagEventManager in RemAbilityUtility; the two coexist because this one
+ * replaces a tag's binding while that one keeps every listener
+ *
  * un-listen all events when out of scope
  */
 USTRUCT(BlueprintType)
@@ -48,7 +54,7 @@ private:
     TMap<FGameplayTag, FDelegateHandle> EventHandleMap{};
 
 public:
-    using FEventDelegate = TMulticastDelegate<void(const FGameplayTag, int32)>::FDelegate;
+    using FEventDelegate = TMulticastDelegate<void(FGameplayTag, int32)>::FDelegate;
     using Super::Super;
 
     FRemScopedAbilityTagEventManager(const FRemScopedAbilityTagEventManager& Other)                = delete;

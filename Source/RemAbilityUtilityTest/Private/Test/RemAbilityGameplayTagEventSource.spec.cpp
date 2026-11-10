@@ -43,10 +43,10 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             auto* Source   = MakeTagEventSource(Fixture);
             const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(
                 TEXT("Test.AbilityUtility.TagEventSource.AddRemove"));
-            int32 CallCount = 0;
+            auto CallCount = 0;
             FGameplayTag LastTag{};
-            int32 LastCount = 0;
-            Source->RegisterTagEvent(Tag, FTagEventDelegate::CreateLambda(
+            auto LastCount = 0;
+            (void)Source->RegisterTagEvent(Tag, FTagEventDelegate::CreateLambda(
                 [&CallCount, &LastTag, &LastCount](const FGameplayTag FiredTag, const int32 Count)
                 {
                     ++CallCount;
@@ -72,8 +72,8 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
                 TEXT("Test.AbilityUtility.TagEventSource.FireA"));
             const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(
                 TEXT("Test.AbilityUtility.TagEventSource.FireB"));
-            int32 CallCount = 0;
-            Source->RegisterTagEvent(TagA, FTagEventDelegate::CreateLambda(
+            auto CallCount = 0;
+            (void)Source->RegisterTagEvent(TagA, FTagEventDelegate::CreateLambda(
                 [&CallCount](const FGameplayTag, const int32)
                 {
                     ++CallCount;
@@ -91,14 +91,14 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             auto* Source   = MakeTagEventSource(Fixture);
             const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(
                 TEXT("Test.AbilityUtility.TagEventSource.MultiListener"));
-            int32 FirstCallCount  = 0;
-            int32 SecondCallCount = 0;
-            Source->RegisterTagEvent(Tag, FTagEventDelegate::CreateLambda(
+            auto FirstCallCount  = 0;
+            auto SecondCallCount = 0;
+            (void)Source->RegisterTagEvent(Tag, FTagEventDelegate::CreateLambda(
                 [&FirstCallCount](const FGameplayTag, const int32)
                 {
                     ++FirstCallCount;
                 }));
-            Source->RegisterTagEvent(Tag, FTagEventDelegate::CreateLambda(
+            (void)Source->RegisterTagEvent(Tag, FTagEventDelegate::CreateLambda(
                 [&SecondCallCount](const FGameplayTag, const int32)
                 {
                     ++SecondCallCount;
@@ -130,14 +130,14 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
 
     Describe(TEXT("UnregisterTagEvent"), [this]
     {
-        It(TEXT("should stop only the unregistered handle and keep the other listener"), [this]
+        It(TEXT("should stop only the unregistered binding of the tag and keep the other listener"), [this]
         {
             FRemAbilityUtilityTestFixture Fixture;
             auto* Source   = MakeTagEventSource(Fixture);
             const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(
                 TEXT("Test.AbilityUtility.TagEventSource.HandleUnregister"));
-            int32 FirstCallCount   = 0;
-            int32 SecondCallCount  = 0;
+            auto FirstCallCount    = 0;
+            auto SecondCallCount   = 0;
             const auto FirstHandle = Source->RegisterTagEvent(Tag, FTagEventDelegate::CreateLambda(
                 [&FirstCallCount](const FGameplayTag, const int32)
                 {
@@ -150,13 +150,73 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
                 }));
             TestTrue(TEXT("distinct handles"), FirstHandle != SecondHandle);
 
-            Source->UnregisterTagEvent(FirstHandle);
+            Source->UnregisterTagEvent(Tag, FirstHandle);
 
             Fixture.GetAbilitySystem()->AddLooseGameplayTag(Tag);
             Fixture.GetAbilitySystem()->RemoveLooseGameplayTag(Tag);
 
             TestEqual(TEXT("unregistered listener does not fire"), FirstCallCount, 0);
             TestEqual(TEXT("other listener still fires"), SecondCallCount, 2);
+        });
+
+        It(TEXT("should unregister only the requested tag when three tags share a delegate instance"), [this]
+        {
+            FRemAbilityUtilityTestFixture Fixture;
+            auto* Source    = MakeTagEventSource(Fixture);
+            const auto TagA = FRemAbilityUtilityTestFixture::AddNativeTag(
+                TEXT("Test.AbilityUtility.TagEventSource.SharedDelegateA"));
+            const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(
+                TEXT("Test.AbilityUtility.TagEventSource.SharedDelegateB"));
+            const auto TagC = FRemAbilityUtilityTestFixture::AddNativeTag(
+                TEXT("Test.AbilityUtility.TagEventSource.SharedDelegateC"));
+            auto CountA         = 0;
+            auto CountB         = 0;
+            auto CountC         = 0;
+            // per-tag counters: a mutation that removes a handle's first entry instead of the
+            // requested tag stops a different tag and turns one of these red, independent of the
+            // multimap's iteration order
+            const auto Delegate = FTagEventDelegate::CreateLambda(
+                [&CountA, &CountB, &CountC, &TagA, &TagB, &TagC](const FGameplayTag Tag, const int32)
+                {
+                    if (Tag == TagA)
+                    {
+                        ++CountA;
+                    }
+                    else if (Tag == TagB)
+                    {
+                        ++CountB;
+                    }
+                    else if (Tag == TagC)
+                    {
+                        ++CountC;
+                    }
+                });
+
+            const auto HandleA = Source->RegisterTagEvent(TagA, Delegate);
+            const auto HandleB = Source->RegisterTagEvent(TagB, Delegate);
+            const auto HandleC = Source->RegisterTagEvent(TagC, Delegate);
+            TestTrue(TEXT("one delegate instance yields one handle"), HandleA == HandleB && HandleB == HandleC);
+
+            // unregister the middle tag: a handle-only removal would drop the first entry instead
+            Source->UnregisterTagEvent(TagB, HandleB);
+
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagA);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagB);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagC);
+            TestEqual(TEXT("the unregistered tag does not fire"), CountB, 0);
+            TestEqual(TEXT("the first tag still fires"), CountA, 1);
+            TestEqual(TEXT("the last tag still fires"), CountC, 1);
+
+            Source->UnregisterTagEvent(TagA, HandleA);
+            Source->UnregisterTagEvent(TagC, HandleC);
+
+            Fixture.GetAbilitySystem()->RemoveLooseGameplayTag(TagA);
+            Fixture.GetAbilitySystem()->RemoveLooseGameplayTag(TagB);
+            Fixture.GetAbilitySystem()->RemoveLooseGameplayTag(TagC);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagA);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagB);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagC);
+            TestEqual(TEXT("no tag fires after all bindings are unregistered"), CountA + CountB + CountC, 2);
         });
     });
 
@@ -170,25 +230,32 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
                 TEXT("Test.AbilityUtility.TagEventSource.BulkA"));
             const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(
                 TEXT("Test.AbilityUtility.TagEventSource.BulkB"));
-            int32 CallCount     = 0;
+            auto CallCount      = 0;
+            // one shared delegate instance for both tags: the handle is the same, so only a
+            // multimap that keys by tag can reach both bindings on unregister-all
             const auto Delegate = FTagEventDelegate::CreateLambda(
                 [&CallCount](const FGameplayTag, const int32)
                 {
                     ++CallCount;
                 });
-            // the same delegate instance is registered for two tags on purpose: UE
-            // multicast delegates return the delegate instance's own handle, so both
-            // registrations collide in HandleToTagMap — unregister-all must still clear
-            // every binding (regression binding for the handle-collision defect)
-            Source->RegisterTagEvent(TagA, Delegate);
-            Source->RegisterTagEvent(TagB, Delegate);
+            const auto HandleA = Source->RegisterTagEvent(TagA, Delegate);
+            const auto HandleB = Source->RegisterTagEvent(TagB, Delegate);
+            TestTrue(TEXT("one delegate instance yields one handle"), HandleA == HandleB);
 
-            Source->UnregisterAllTagEvents();
-            Source->UnregisterAllTagEvents();
-
+            // baseline: both registrations are bound and fire
             Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagA);
             Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagB);
-            TestEqual(TEXT("no callbacks after unregister-all"), CallCount, 0);
+            TestEqual(TEXT("both bindings fire before unregister-all"), CallCount, 2);
+
+            Source->UnregisterAllTagEvents();
+            Source->UnregisterAllTagEvents();
+
+            // drive the same tags again: unregistered bindings must stay silent
+            Fixture.GetAbilitySystem()->RemoveLooseGameplayTag(TagA);
+            Fixture.GetAbilitySystem()->RemoveLooseGameplayTag(TagB);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagA);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagB);
+            TestEqual(TEXT("no further callbacks after unregister-all"), CallCount, 2);
         });
 
         It(TEXT("should unregister all tag events when the component is destroyed"), [this]
@@ -197,8 +264,8 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             auto* Source   = MakeTagEventSource(Fixture);
             const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(
                 TEXT("Test.AbilityUtility.TagEventSource.DestroyComponent"));
-            int32 CallCount = 0;
-            Source->RegisterTagEvent(Tag, FTagEventDelegate::CreateLambda(
+            auto CallCount = 0;
+            (void)Source->RegisterTagEvent(Tag, FTagEventDelegate::CreateLambda(
                 [&CallCount](const FGameplayTag, const int32)
                 {
                     ++CallCount;
@@ -217,8 +284,8 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             auto* Source   = MakeTagEventSource(Fixture);
             const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(
                 TEXT("Test.AbilityUtility.TagEventSource.EndPlay"));
-            int32 CallCount = 0;
-            Source->RegisterTagEvent(Tag, FTagEventDelegate::CreateLambda(
+            auto CallCount = 0;
+            (void)Source->RegisterTagEvent(Tag, FTagEventDelegate::CreateLambda(
                 [&CallCount](const FGameplayTag, const int32)
                 {
                     ++CallCount;
@@ -244,13 +311,13 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
 
             const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(
                 TEXT("Test.AbilityUtility.TagEventSource.Swap"));
-            int32 CallCount     = 0;
+            auto CallCount      = 0;
             const auto Delegate = FTagEventDelegate::CreateLambda(
                 [&CallCount](const FGameplayTag, const int32)
                 {
                     ++CallCount;
                 });
-            Source->RegisterTagEvent(Tag, Delegate);
+            (void)Source->RegisterTagEvent(Tag, Delegate);
 
             Source->SetAbilitySystem(OtherAbilitySystem);
 
@@ -261,12 +328,47 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
             // NOTE: do not fire the tag on the new ability system before re-registering —
             // that would consume the 0 -> 1 significant transition, and a later re-fire
             // (1 -> 2) does not broadcast NewOrRemoved.
-            Source->RegisterTagEvent(Tag, Delegate);
+            (void)Source->RegisterTagEvent(Tag, Delegate);
             OtherAbilitySystem->AddLooseGameplayTag(Tag);
             TestEqual(TEXT("new ability system fires after re-register"), CallCount, 1);
 
             OtherAbilitySystem->RemoveLooseGameplayTag(Tag);
             TestEqual(TEXT("new ability system fires on remove"), CallCount, 2);
+        });
+
+        It(TEXT("should unregister the bindings even when the same ability system is set again"), [this]
+        {
+            FRemAbilityUtilityTestFixture Fixture;
+            auto* Source    = MakeTagEventSource(Fixture);
+            const auto TagA = FRemAbilityUtilityTestFixture::AddNativeTag(
+                TEXT("Test.AbilityUtility.TagEventSource.ReSetA"));
+            const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(
+                TEXT("Test.AbilityUtility.TagEventSource.ReSetB"));
+            auto CallCount      = 0;
+            const auto Delegate = FTagEventDelegate::CreateLambda(
+                [&CallCount](const FGameplayTag, const int32)
+                {
+                    ++CallCount;
+                });
+            (void)Source->RegisterTagEvent(TagA, Delegate);
+            (void)Source->RegisterTagEvent(TagB, Delegate);
+
+            // baseline: both bindings are live, so each tag fires once
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagA);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagB);
+            TestEqual(TEXT("both bindings fire before re-setting"), CallCount, 2);
+
+            // this component clears every binding on every SetAbilitySystem call, even for the same
+            // ability system; that differs from FRemMultiListenerAbilityTagEventManager, which clears
+            // only when the ability system changes
+            Source->SetAbilitySystem(Fixture.GetAbilitySystem());
+
+            // re-trigger both tags: remove then add so the NewOrRemoved event fires again
+            Fixture.GetAbilitySystem()->RemoveLooseGameplayTag(TagA);
+            Fixture.GetAbilitySystem()->RemoveLooseGameplayTag(TagB);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagA);
+            Fixture.GetAbilitySystem()->AddLooseGameplayTag(TagB);
+            TestEqual(TEXT("re-setting the same ability system clears the bindings"), CallCount, 2);
         });
     });
 
@@ -298,6 +400,50 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
 
             TestFalse(TEXT("tag A removed"), Source->GetOwnedTags().HasTag(TagA));
             TestTrue(TEXT("tag B kept"), Source->GetOwnedTags().HasTag(TagB));
+        });
+
+        It(TEXT("should add and remove owned tags given as a view"), [this]
+        {
+            FRemAbilityUtilityTestFixture Fixture;
+            auto* Source    = MakeTagEventSource(Fixture);
+            const auto TagA = FRemAbilityUtilityTestFixture::AddNativeTag(
+                TEXT("Test.AbilityUtility.TagEventSource.OwnedViewA"));
+            const auto TagB = FRemAbilityUtilityTestFixture::AddNativeTag(
+                TEXT("Test.AbilityUtility.TagEventSource.OwnedViewB"));
+
+            // the view overload is invoked on the concrete type, which compiles only because the
+            // class pulls it into scope; the default implementation builds a container and forwards
+            // to the container overload
+            const auto TagsToAdd = TArray<FGameplayTag>{TagA, TagB};
+            Source->AddOwnedTags(MakeConstArrayView(TagsToAdd));
+
+            TestTrue(TEXT("view add owns tag A"), Source->GetOwnedTags().HasTag(TagA));
+            TestTrue(TEXT("view add owns tag B"), Source->GetOwnedTags().HasTag(TagB));
+
+            const auto TagsToRemove = TArray<FGameplayTag>{TagA};
+            Source->RemoveOwnedTags(MakeConstArrayView(TagsToRemove));
+
+            TestFalse(TEXT("view remove drops tag A"), Source->GetOwnedTags().HasTag(TagA));
+            TestTrue(TEXT("view remove keeps tag B"), Source->GetOwnedTags().HasTag(TagB));
+        });
+
+        It(TEXT("should leave owned tags unchanged for an empty view"), [this]
+        {
+            FRemAbilityUtilityTestFixture Fixture;
+            auto* Source   = MakeTagEventSource(Fixture);
+            const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(
+                TEXT("Test.AbilityUtility.TagEventSource.OwnedEmptyView"));
+            FGameplayTagContainer BaselineTags{Tag};
+            Source->AddOwnedTags(BaselineTags);
+            TestEqual(TEXT("baseline owns one tag"), Source->GetOwnedTags().Num(), 1);
+
+            const TConstArrayView<FGameplayTag> EmptyView{};
+            Source->AddOwnedTags(EmptyView);
+            TestEqual(TEXT("empty view add leaves the owned tags unchanged"), Source->GetOwnedTags().Num(), 1);
+
+            Source->RemoveOwnedTags(EmptyView);
+            TestEqual(TEXT("empty view remove leaves the owned tags unchanged"), Source->GetOwnedTags().Num(), 1);
+            TestTrue(TEXT("the baseline tag is still owned"), Source->GetOwnedTags().HasTag(Tag));
         });
 
         It(TEXT("should return an empty container when no ability system is set"), [this]
@@ -372,8 +518,8 @@ void FRemAbilityGameplayTagEventSourceTest::Define()
 
             const auto Tag = FRemAbilityUtilityTestFixture::AddNativeTag(
                 TEXT("Test.AbilityUtility.TagEventSource.ProviderCreate"));
-            int32 CallCount = 0;
-            Source->RegisterTagEvent(Tag, FTagEventDelegate::CreateLambda(
+            auto CallCount = 0;
+            (void)Source->RegisterTagEvent(Tag, FTagEventDelegate::CreateLambda(
                 [&CallCount](const FGameplayTag, const int32)
                 {
                     ++CallCount;
